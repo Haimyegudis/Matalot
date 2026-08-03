@@ -3,13 +3,23 @@ import { Link } from 'react-router-dom'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { FamilyData } from '../lib/store'
-import { weekBounds, weeklyScores, dayKey, pickedChoreIds } from '../lib/logic'
+import { weekBounds, weeklyScores, dayKey, pickedChoreIds, nextInTurn } from '../lib/logic'
+import { g } from '../lib/gender'
+import type { Chore, Profile } from '../lib/db-types'
 import { ChoreButton } from '../components/ChoreButton'
 import { ScoreBar } from '../components/ScoreBar'
 import { ShowerCard } from '../components/ShowerCard'
 import { ChoreIcon, IconPicker, ICON_LABELS } from '../components/icons'
 import { Sheet } from '../components/Sheet'
 import { playMagic } from '../lib/sound'
+
+/** "whose turn" line for turn-taking chores, with the user's requested phrasing */
+function turnPhrase(chore: Chore, kid: Profile, isSelf: boolean): string {
+  const subject = isSelf ? `${kid.name}, ${g(kid, 'אתה', 'את')}` : kid.name
+  if (chore.title.includes('זבל')) return `🗑 ${subject} ${g(kid, 'מוציא', 'מוציאה')} את הזבל`
+  if (chore.title.includes('שלג')) return `🐕 ${subject} ${g(kid, 'מוציא', 'מוציאה')} את שלגונה לטיול`
+  return isSelf ? `🔁 ${kid.name}, תורך!` : `🔁 התור של ${kid.name}`
+}
 
 export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boolean }) {
   const { profiles, currentProfile } = useSession()
@@ -211,6 +221,8 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
             me.role === 'parent'
               ? todayPicks.find((p) => p.chore_id === chore.id && p.child_id)?.child_id ?? null
               : null
+          const nextId = chore.turn_taking ? nextInTurn(data.completions, chore.id, kids) : null
+          const nextKid = kids.find((k) => k.id === nextId)
           // parent can remove a chore that was pulled onto today's board
           const removable =
             me.role === 'parent' && !yesterday && chore.days !== null && chore.days.length === 0
@@ -233,6 +245,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
                   ? `⏰ עד ${new Date(remindPick.remind_at!).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`
                   : null
               }
+              turnLabel={nextKid ? turnPhrase(chore, nextKid, nextKid.id === me.id) : null}
               readonly={viewOnly}
               onDone={() => doChore(chore.id)}
             />

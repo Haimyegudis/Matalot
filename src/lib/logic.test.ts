@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { weekBounds, weeklyScores, showerFirstTonight, dayKey, pickedChoreIds, showerFirstOn } from './logic'
+import { weekBounds, weeklyScores, showerFirstTonight, dayKey, pickedChoreIds, showerFirstOn, nextInTurn } from './logic'
 import type { Chore, Completion, DayPick, Profile, TaskRow } from './db-types'
 
 const kidA: Profile = { id: 'a', family_id: 'f', name: 'דני', role: 'child', gender: 'male', avatar: null, photo_url: null, color: '#f00', sort: 0 }
 const kidB: Profile = { id: 'b', family_id: 'f', name: 'יעל', role: 'child', gender: 'female', avatar: null, photo_url: null, color: '#00f', sort: 1 }
 
 function chore(over: Partial<Chore>): Chore {
-  return { id: 'c1', family_id: 'f', title: 'זבל', note: null, icon: 'trash', points: 1, assigned_to: null, is_shower: false, track_only: false, per_day: 1, days: null, active: true, sort: 0, ...over }
+  return { id: 'c1', family_id: 'f', title: 'זבל', note: null, icon: 'trash', points: 1, assigned_to: null, is_shower: false, track_only: false, per_day: 1, days: null, turn_taking: false, active: true, sort: 0, ...over }
 }
 function comp(over: Partial<Completion>): Completion {
   return { id: Math.random().toString(), chore_id: 'c1', profile_id: 'a', family_id: 'f', completed_at: '2026-08-03T10:00:00+03:00', day: '2026-08-03', revoked_by: null, ...over }
@@ -116,6 +116,30 @@ describe('showerFirstOn', () => {
     ]
     expect(showerFirstOn(completions, 'sh', '2026-08-02')).toBeNull()
     expect(showerFirstOn([], 'sh', '2026-08-02')).toBeNull()
+  })
+})
+
+describe('nextInTurn', () => {
+  it('sibling of the most recent doer is next', () => {
+    const completions = [
+      comp({ chore_id: 'c1', profile_id: 'a', completed_at: '2026-08-02T10:00:00+03:00', day: '2026-08-02' }),
+      comp({ chore_id: 'c1', profile_id: 'b', completed_at: '2026-08-03T09:00:00+03:00', day: '2026-08-03' }),
+    ]
+    expect(nextInTurn(completions, 'c1', [kidA, kidB])).toBe('a')
+  })
+
+  it('ignores revoked rows and other chores', () => {
+    const completions = [
+      comp({ chore_id: 'c1', profile_id: 'b', completed_at: '2026-08-03T09:00:00+03:00', revoked_by: 'p' }),
+      comp({ chore_id: 'c2', profile_id: 'b', completed_at: '2026-08-03T10:00:00+03:00' }),
+      comp({ chore_id: 'c1', profile_id: 'a', completed_at: '2026-08-02T10:00:00+03:00', day: '2026-08-02' }),
+    ]
+    expect(nextInTurn(completions, 'c1', [kidA, kidB])).toBe('b')
+  })
+
+  it('null with no history or single kid', () => {
+    expect(nextInTurn([], 'c1', [kidA, kidB])).toBeNull()
+    expect(nextInTurn([comp({ chore_id: 'c1', profile_id: 'a' })], 'c1', [kidA])).toBeNull()
   })
 })
 

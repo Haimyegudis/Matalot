@@ -41,6 +41,8 @@ export interface Chore {
   per_day: number
   /** weekday schedule 0=Sun..6=Sat; null = every day; [] = general list (no schedule) */
   days: number[] | null
+  /** kids alternate; next in turn = sibling of last doer */
+  turn_taking: boolean
   active: boolean
   sort: number
 }

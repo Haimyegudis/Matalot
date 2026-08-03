@@ -16,6 +16,7 @@ interface Draft {
   points: number
   per_day: number
   track_only: boolean
+  turn_taking: boolean
   /** null = daily, [] = general list, [0..6] = specific weekdays */
   days: number[] | null
   assigned_to: string | null
@@ -53,7 +54,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
     if (draft.id) {
       await supabase
         .from('chores')
-        .update({ title: draft.title, note: draft.note.trim() || null, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, days, assigned_to: draft.assigned_to })
+        .update({ title: draft.title, note: draft.note.trim() || null, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, turn_taking: draft.turn_taking, days, assigned_to: draft.assigned_to })
         .eq('id', draft.id)
     } else {
       const { data: created } = await supabase
@@ -66,6 +67,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
           points: draft.points,
           per_day: draft.per_day,
           track_only: draft.track_only,
+          turn_taking: draft.turn_taking,
           days,
           assigned_to: draft.assigned_to,
           sort: active.length,
@@ -116,7 +118,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
             const pickDay = pick ? pick.day.slice(0, 10) : ''
             setDraft({
               id: c.id, title: c.title, note: c.note ?? '', icon: c.icon, points: c.points,
-              per_day: c.per_day ?? 1, track_only: c.track_only ?? false, days: c.days, assigned_to: c.assigned_to,
+              per_day: c.per_day ?? 1, track_only: c.track_only ?? false, turn_taking: c.turn_taking ?? false, days: c.days, assigned_to: c.assigned_to,
               pickDay,
               remindTime: remind ? `${String(remind.getHours()).padStart(2, '0')}:${String(remind.getMinutes()).padStart(2, '0')}` : '',
               prevPickDay: pickDay,
@@ -159,7 +161,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         </div>
       )}
 
-      <button className="btn" onClick={() => setDraft({ title: '', note: '', icon: 'star', points: 1, per_day: 1, track_only: false, days: null, assigned_to: null, pickDay: '', remindTime: '', prevPickDay: '' })}>
+      <button className="btn" onClick={() => setDraft({ title: '', note: '', icon: 'star', points: 1, per_day: 1, track_only: false, turn_taking: false, days: null, assigned_to: null, pickDay: '', remindTime: '', prevPickDay: '' })}>
         ➕ מטלה חדשה
       </button>
 
@@ -290,6 +292,15 @@ export function ManageChores({ data }: { data: FamilyData }) {
                 style={{ width: 20, height: 20 }}
               />
               למעקב בלבד — בלי נקודות (חוגים, שיעורים)
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700 }}>
+              <input
+                type="checkbox"
+                checked={draft.turn_taking}
+                onChange={(e) => setDraft({ ...draft, turn_taking: e.target.checked })}
+                style={{ width: 20, height: 20 }}
+              />
+              🔁 בתורות — הילדים מתחלפים, מוצג מי הבא בתור
             </label>
             <select
               value={draft.assigned_to ?? ''}

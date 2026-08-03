@@ -18,6 +18,11 @@ export function ShowerCard({
     .filter((c) => c.chore_id === chore.id && c.day === day && !c.revoked_by)
     .sort((a, b) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime())
   const mine = todayRows.some((c) => c.profile_id === currentKid.id)
+  // once someone showered, the sibling is explicitly next in turn
+  const showered = new Set(todayRows.map((c) => c.profile_id))
+  const pendingKid = todayRows.length > 0 ? kids.find((k) => !showered.has(k.id)) : undefined
+  const phrase = (k: Profile, text: string) =>
+    k.id === currentKid.id ? `${k.name}, ${g(k, 'אתה', 'את')} ${text}` : `${k.name} ${text}`
   const suggested = showerFirstTonight(
     completions.filter((c) => c.chore_id === chore.id),
     chore.id,
@@ -59,12 +64,19 @@ export function ShowerCard({
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem' }}>מקלחת</div>
         {todayRows.length > 0 ? (
-          <div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)', fontWeight: 600 }}>
-            {todayRows.map((c, i) => `${i + 1}. ${nameOf(c.profile_id)}`).join('  ')}
-          </div>
+          <>
+            <div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)', fontWeight: 600 }}>
+              {todayRows.map((c, i) => `${i + 1}. ${nameOf(c.profile_id)}`).join('  ')}
+            </div>
+            {pendingKid && (
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--sky)' }}>
+                {phrase(pendingKid, `${g(pendingKid, 'הבא', 'הבאה')} בתור 🚿`)}
+              </div>
+            )}
+          </>
         ) : suggestedKid ? (
           <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--sky)' }}>
-            הערב {g(suggestedKid, 'ראשון', 'ראשונה')}: {suggestedKid.name} 🚿
+            {phrase(suggestedKid, `${g(suggestedKid, 'מתקלח ראשון', 'מתקלחת ראשונה')} הערב 🚿`)}
           </div>
         ) : (
           <div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)' }}>מי מתקלח ראשון הערב?</div>

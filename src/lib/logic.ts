@@ -65,6 +65,20 @@ export function showerFirstOn(completions: Completion[], choreId: string, day: s
 }
 
 /**
+ * Turn-taking chores: next in turn is the sibling of whoever did it most
+ * recently. Null with no history or fewer than two kids.
+ */
+export function nextInTurn(completions: Completion[], choreId: string, kids: Profile[]): string | null {
+  if (kids.length < 2) return null
+  const last = completions
+    .filter((c) => c.chore_id === choreId && !c.revoked_by)
+    .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0]
+  if (!last) return null
+  const other = kids.find((k) => k.id !== last.profile_id)
+  return other ? other.id : null
+}
+
+/**
  * Tonight's suggested first shower: the kid who was NOT first on the most
  * recent past day that has live shower completions. Null with no history.
  */

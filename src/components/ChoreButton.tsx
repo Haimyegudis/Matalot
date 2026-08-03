@@ -15,11 +15,13 @@ interface Props {
   assignedOther?: string | null
   /** "⏰ עד HH:MM" line for a today-pick with a reminder */
   remindLabel?: string | null
+  /** whose turn it is (turn-taking chores) */
+  turnLabel?: string | null
   readonly?: boolean
   onDone: () => Promise<void>
 }
 
-export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, assignedOther, remindLabel, readonly, onDone }: Props) {
+export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, assignedOther, remindLabel, turnLabel, readonly, onDone }: Props) {
   const [bursting, setBursting] = useState(false)
   const [busy, setBusy] = useState(false)
   const perDay = chore.per_day ?? 1
@@ -86,6 +88,11 @@ export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, assignedO
       {remindLabel && !closed && (
         <span style={{ fontSize: '0.74rem', color: 'var(--coral)', fontWeight: 700 }}>
           {remindLabel}
+        </span>
+      )}
+      {turnLabel && !closed && (
+        <span style={{ fontSize: '0.74rem', color: 'var(--sky)', fontWeight: 700 }}>
+          {turnLabel}
         </span>
       )}
 
