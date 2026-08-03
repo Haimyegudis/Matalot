@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 
 const tabs = [
   { to: '/', label: 'היום', emoji: '⚡' },
+  { to: '/yesterday', label: 'אתמול', emoji: '🕐' },
   { to: '/calendar', label: 'יומן', emoji: '📅' },
   { to: '/profile', label: 'פרופיל', emoji: '👤' },
 ]

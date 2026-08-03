@@ -55,8 +55,8 @@ function AppRoutes() {
             aria-label="מצב הורה"
             style={{
               position: 'fixed',
-              top: 12,
-              insetInlineEnd: 12,
+              bottom: 'calc(var(--nav-h) + 14px)',
+              insetInlineEnd: 14,
               zIndex: 30,
               width: 40,
               height: 40,

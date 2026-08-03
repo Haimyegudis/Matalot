@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { FamilyData } from '../lib/store'
@@ -9,6 +8,7 @@ import { ScoreBar } from '../components/ScoreBar'
 import { ShowerCard } from '../components/ShowerCard'
 import { ChoreIcon, IconPicker } from '../components/icons'
 import { Sheet } from '../components/Sheet'
+import { playMagic } from '../lib/sound'
 
 export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boolean }) {
   const { profiles, currentProfile } = useSession()
@@ -49,6 +49,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   }
 
   async function doChore(choreId: string) {
+    playMagic()
     const result = await data.completeChore(choreId, me.id)
     if (result === 'already_done') showToast('מישהו כבר עשה את זה! 😅')
     else data.notify('completion', { profileId: me.id, title: data.chores.find((c) => c.id === choreId)?.title ?? '' })
@@ -86,13 +87,6 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           </h1>
           <div style={{ color: 'var(--ink-soft)', fontSize: '0.85rem', fontWeight: 600 }}>{dateLabel}</div>
         </div>
-        <Link
-          to={yesterday ? '/' : '/yesterday'}
-          className="btn btn--ghost"
-          style={{ padding: '8px 14px', fontSize: '0.9rem', textDecoration: 'none' }}
-        >
-          {yesterday ? 'להיום ⬅' : 'אתמול 🕐'}
-        </Link>
       </header>
 
       <ScoreBar kids={kids} scores={scores} currentId={me.id} />
@@ -128,6 +122,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
                   className="btn btn--coral"
                   style={{ padding: '10px 16px', fontSize: '0.95rem' }}
                   onClick={async () => {
+                    playMagic()
                     await data.completeTask(t.id)
                     data.notify('completion', { profileId: me.id, title: t.title })
                   }}

@@ -49,7 +49,7 @@ export function PinGate({ children }: { children: ReactNode }) {
         ))}
       </div>
       {wrong && <div style={{ color: 'var(--bad)', fontWeight: 700 }}>קוד שגוי</div>}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 72px)', gap: 12 }}>
+      <div dir="ltr" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 72px)', gap: 12 }}>
         {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'].map((d, i) =>
           d === '' ? (
             <span key={i} />
