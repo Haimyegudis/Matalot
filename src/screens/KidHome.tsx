@@ -20,9 +20,8 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
 
   const scores = weeklyScores(data.completions, data.tasks, data.chores, kids, weekBounds(new Date()))
 
-  const activeChores = data.chores.filter(
-    (c) => c.active && !c.is_shower && (c.assigned_to === null || c.assigned_to === me.id),
-  )
+  // assignment is a designation, not a lock — kids see and may take any chore
+  const activeChores = data.chores.filter((c) => c.active && !c.is_shower)
   const showerChore = data.chores.find((c) => c.is_shower && c.active)
 
   const dayCompletions = data.completions.filter((c) => c.day === day && !c.revoked_by)
@@ -125,6 +124,8 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           const rows = dayCompletions.filter((c) => c.chore_id === chore.id)
           const mine = rows.some((c) => c.profile_id === me.id)
           const names = [...new Set(rows.map((c) => nameOf(c.profile_id)))]
+          const assignedOther =
+            chore.assigned_to && chore.assigned_to !== me.id ? nameOf(chore.assigned_to) : null
           return (
             <ChoreButton
               key={chore.id}
@@ -132,6 +133,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
               doneCount={rows.length}
               doneByNames={names}
               doneByMe={mine}
+              assignedOther={assignedOther}
               readonly={yesterday}
               onDone={() => doChore(chore.id)}
             />

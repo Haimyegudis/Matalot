@@ -11,11 +11,13 @@ interface Props {
   doneByNames: string[]
   /** current kid completed it at least once today */
   doneByMe: boolean
+  /** name of the sibling this chore is designated to (null = mine/shared) */
+  assignedOther?: string | null
   readonly?: boolean
   onDone: () => Promise<void>
 }
 
-export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, readonly, onDone }: Props) {
+export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, assignedOther, readonly, onDone }: Props) {
   const [bursting, setBursting] = useState(false)
   const [busy, setBusy] = useState(false)
   const perDay = chore.per_day ?? 1
@@ -59,6 +61,11 @@ export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, readonly,
         <ChoreIcon name={chore.icon} size={58} />
       </span>
       <span style={{ fontWeight: 700, fontSize: '0.95rem', lineHeight: 1.2 }}>{chore.title}</span>
+      {assignedOther && !closed && (
+        <span style={{ fontSize: '0.7rem', color: 'var(--sky)', fontWeight: 600 }}>
+          מיועדת ל{assignedOther} — אפשר לקחת
+        </span>
+      )}
 
       {closed ? (
         <span style={{ fontSize: '0.8rem', color: doneByMe ? 'var(--good)' : 'var(--ink-soft)', fontWeight: 700 }}>
