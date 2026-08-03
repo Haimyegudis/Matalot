@@ -5,13 +5,15 @@ export interface Family {
   parent_pin_hash: string
 }
 
+/* DiceBear "Adventurer" selections */
 export interface AvatarConfig {
   skin: string
   hair: string
   hairColor: string
   eyes: string
-  outfit: string
-  accessory: string | null
+  mouth: string
+  glasses: string | null
+  earrings: string | null
 }
 
 export interface Profile {

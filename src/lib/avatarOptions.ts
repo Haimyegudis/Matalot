@@ -1,52 +1,51 @@
 import type { AvatarConfig } from './db-types'
 
-export const SKINS = ['#ffdbac', '#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#5c3b1e']
+/* DiceBear "Adventurer" variant lists (curated subsets). */
 
-export const HAIR_STYLES = ['short', 'curly', 'long', 'ponytail', 'spiky', 'bangs', 'braids', 'bun'] as const
+export const SKINS = ['f2d3b1', 'ecad80', '9e5622', '763900']
 
-export const HAIR_COLORS = ['#2b2145', '#5b3a1e', '#a8642a', '#e8b04b', '#d94f30', '#7a4fd0']
+export const HAIR_COLORS = ['0e0e0e', '562306', 'ab2a18', 'ac6511', 'b9a05f', 'cb6820', 'afafaf', '592454', 'dba3be', '85c2c6']
 
-export const EYE_STYLES = ['round', 'happy', 'wink', 'star', 'lashes'] as const
-
-export interface OutfitOption {
-  id: string
-  color: string
-  deco: 'plain' | 'stripes' | 'star' | 'heart' | 'zigzag'
-  shape: 'shirt' | 'dress' | 'sport'
-}
-
-export const OUTFITS: OutfitOption[] = [
-  { id: 'coral', color: '#ff6b6b', deco: 'star', shape: 'shirt' },
-  { id: 'teal', color: '#2ec4b6', deco: 'plain', shape: 'shirt' },
-  { id: 'sunny', color: '#ffc53d', deco: 'zigzag', shape: 'shirt' },
-  { id: 'grape', color: '#9b5de5', deco: 'heart', shape: 'shirt' },
-  { id: 'sky', color: '#4cc9f0', deco: 'stripes', shape: 'shirt' },
-  { id: 'navy', color: '#3d5a80', deco: 'stripes', shape: 'shirt' },
-  { id: 'dress-pink', color: '#ff8fab', deco: 'heart', shape: 'dress' },
-  { id: 'dress-grape', color: '#9b5de5', deco: 'star', shape: 'dress' },
-  { id: 'dress-mint', color: '#7bd88f', deco: 'plain', shape: 'dress' },
-  { id: 'dress-sunny', color: '#ffc53d', deco: 'zigzag', shape: 'dress' },
-  { id: 'sport-red', color: '#e5484d', deco: 'stripes', shape: 'sport' },
-  { id: 'sport-blue', color: '#4cc9f0', deco: 'stripes', shape: 'sport' },
-  { id: 'sport-green', color: '#23a94d', deco: 'stripes', shape: 'sport' },
+export const HAIR_STYLES = [
+  'short01', 'short04', 'short07', 'short09', 'short12', 'short15', 'short16', 'short19',
+  'long01', 'long03', 'long06', 'long09', 'long12', 'long15', 'long19', 'long24',
 ]
 
-export const ACCESSORIES = ['glasses', 'cap', 'crown', 'bow', 'headphones', 'makeup', 'earrings'] as const
+export const EYE_STYLES = ['variant01', 'variant04', 'variant06', 'variant09', 'variant12', 'variant14', 'variant19', 'variant22', 'variant24', 'variant26']
+
+export const MOUTH_STYLES = ['variant01', 'variant03', 'variant05', 'variant09', 'variant12', 'variant15', 'variant19', 'variant21', 'variant26', 'variant30']
+
+export const GLASSES = ['variant01', 'variant02', 'variant03', 'variant04', 'variant05']
+
+export const EARRINGS = ['variant01', 'variant02', 'variant03', 'variant04', 'variant06']
 
 export const DEFAULT_AVATAR: AvatarConfig = {
   skin: SKINS[0],
-  hair: 'short',
+  hair: 'short09',
   hairColor: HAIR_COLORS[0],
-  eyes: 'round',
-  outfit: 'teal',
-  accessory: null,
+  eyes: 'variant09',
+  mouth: 'variant12',
+  glasses: null,
+  earrings: null,
 }
 
 export const DEFAULT_AVATAR_GIRL: AvatarConfig = {
   skin: SKINS[0],
-  hair: 'long',
+  hair: 'long09',
   hairColor: HAIR_COLORS[1],
-  eyes: 'lashes',
-  outfit: 'dress-pink',
-  accessory: null,
+  eyes: 'variant12',
+  mouth: 'variant15',
+  glasses: null,
+  earrings: null,
+}
+
+/** Old hand-drawn config (pre-DiceBear) → sensible new default. */
+export function normalizeAvatar(raw: unknown): AvatarConfig {
+  const r = raw as Record<string, unknown> | null
+  if (!r || typeof r !== 'object' || !('mouth' in r)) {
+    const oldHair = r && typeof r.hair === 'string' ? r.hair : ''
+    const longish = ['long', 'braids', 'bun', 'ponytail'].some((h) => oldHair.startsWith(h))
+    return longish ? DEFAULT_AVATAR_GIRL : DEFAULT_AVATAR
+  }
+  return r as unknown as AvatarConfig
 }

@@ -3,7 +3,7 @@ import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { AvatarSvg } from '../components/AvatarSvg'
 import {
-  SKINS, HAIR_STYLES, HAIR_COLORS, EYE_STYLES, OUTFITS, ACCESSORIES, DEFAULT_AVATAR,
+  SKINS, HAIR_STYLES, HAIR_COLORS, EYE_STYLES, MOUTH_STYLES, GLASSES, EARRINGS, normalizeAvatar,
 } from '../lib/avatarOptions'
 import type { AvatarConfig } from '../lib/db-types'
 import { enablePush } from '../lib/push'
@@ -12,8 +12,8 @@ const TABS = [
   { key: 'skin', label: 'עור' },
   { key: 'hair', label: 'שיער' },
   { key: 'eyes', label: 'עיניים' },
-  { key: 'outfit', label: 'בגדים' },
-  { key: 'accessory', label: 'אקססוריז' },
+  { key: 'mouth', label: 'חיוך' },
+  { key: 'extras', label: 'אקססוריז' },
 ] as const
 
 function Swatch({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -21,15 +21,15 @@ function Swatch({ selected, onClick, children }: { selected: boolean; onClick: (
     <button
       onClick={onClick}
       style={{
-        width: 64,
-        height: 64,
-        borderRadius: 16,
+        width: 62,
+        height: 62,
+        borderRadius: 14,
         border: selected ? '3px solid var(--grape)' : '2px solid transparent',
-        background: '#f5f2ff',
+        background: '#efeaff',
         display: 'grid',
         placeItems: 'center',
-        boxShadow: selected ? 'var(--pop)' : 'none',
         overflow: 'hidden',
+        boxShadow: selected ? 'var(--glow-grape)' : 'none',
       }}
     >
       {children}
@@ -40,7 +40,7 @@ function Swatch({ selected, onClick, children }: { selected: boolean; onClick: (
 export function ProfileScreen() {
   const { currentProfile, setCurrentProfile, refresh } = useSession()
   const me = currentProfile!
-  const [config, setConfig] = useState<AvatarConfig>(me.avatar ?? DEFAULT_AVATAR)
+  const [config, setConfig] = useState<AvatarConfig>(normalizeAvatar(me.avatar))
   const [tab, setTab] = useState<(typeof TABS)[number]['key']>('skin')
   const [saved, setSaved] = useState(false)
   const [pushMsg, setPushMsg] = useState('')
@@ -68,7 +68,7 @@ export function ProfileScreen() {
   return (
     <div className="screen" style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: '1.6rem' }}>הפרופיל של {me.name} 🎨</h1>
+        <h1 style={{ fontSize: '1.5rem' }}>הפרופיל של {me.name}</h1>
         <button
           className="btn btn--ghost"
           style={{ padding: '8px 12px', fontSize: '0.85rem' }}
@@ -80,8 +80,13 @@ export function ProfileScreen() {
 
       <div style={{ display: 'grid', placeItems: 'center', position: 'relative' }}>
         <div
-          className="card"
-          style={{ borderRadius: '50%', padding: 10, background: '#f5f2ff', boxShadow: `0 0 28px ${me.color}55` }}
+          style={{
+            borderRadius: '50%',
+            padding: 8,
+            background: '#efeaff',
+            border: 'var(--border)',
+            boxShadow: `0 0 32px ${me.color}55`,
+          }}
         >
           {me.photo_url ? (
             <img src={me.photo_url} alt="" width={150} height={150} style={{ borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
@@ -128,7 +133,7 @@ export function ProfileScreen() {
               borderRadius: 999,
               whiteSpace: 'nowrap',
               fontWeight: 700,
-              background: tab === t.key ? 'var(--grape)' : 'var(--paper)',
+              background: tab === t.key ? 'var(--grape)' : 'rgba(255,255,255,.06)',
               color: tab === t.key ? '#fff' : 'var(--ink)',
               border: 'var(--border)',
             }}
@@ -142,7 +147,7 @@ export function ProfileScreen() {
         {tab === 'skin' &&
           SKINS.map((s) => (
             <Swatch key={s} selected={config.skin === s} onClick={() => set({ skin: s })}>
-              <span style={{ width: 40, height: 40, borderRadius: '50%', background: s, border: '2px solid rgba(43,33,69,.2)' }} />
+              <span style={{ width: 38, height: 38, borderRadius: '50%', background: `#${s}`, border: '2px solid rgba(0,0,0,.15)' }} />
             </Swatch>
           ))}
         {tab === 'hair' && (
@@ -155,7 +160,7 @@ export function ProfileScreen() {
             <div style={{ width: '100%', borderTop: 'var(--border)', margin: '4px 0' }} />
             {HAIR_COLORS.map((c) => (
               <Swatch key={c} selected={config.hairColor === c} onClick={() => set({ hairColor: c })}>
-                <span style={{ width: 40, height: 40, borderRadius: '50%', background: c }} />
+                <span style={{ width: 38, height: 38, borderRadius: '50%', background: `#${c}` }} />
               </Swatch>
             ))}
           </>
@@ -166,20 +171,29 @@ export function ProfileScreen() {
               <AvatarSvg config={{ ...config, eyes: e }} size={56} />
             </Swatch>
           ))}
-        {tab === 'outfit' &&
-          OUTFITS.map((o) => (
-            <Swatch key={o.id} selected={config.outfit === o.id} onClick={() => set({ outfit: o.id })}>
-              <AvatarSvg config={{ ...config, outfit: o.id }} size={56} />
+        {tab === 'mouth' &&
+          MOUTH_STYLES.map((m) => (
+            <Swatch key={m} selected={config.mouth === m} onClick={() => set({ mouth: m })}>
+              <AvatarSvg config={{ ...config, mouth: m }} size={56} />
             </Swatch>
           ))}
-        {tab === 'accessory' && (
+        {tab === 'extras' && (
           <>
-            <Swatch selected={config.accessory === null} onClick={() => set({ accessory: null })}>
-              <span style={{ fontSize: '1.4rem' }}>🚫</span>
+            <Swatch selected={config.glasses === null} onClick={() => set({ glasses: null })}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#3a3455' }}>בלי משקפיים</span>
             </Swatch>
-            {ACCESSORIES.map((a) => (
-              <Swatch key={a} selected={config.accessory === a} onClick={() => set({ accessory: a })}>
-                <AvatarSvg config={{ ...config, accessory: a }} size={56} />
+            {GLASSES.map((gl) => (
+              <Swatch key={gl} selected={config.glasses === gl} onClick={() => set({ glasses: gl })}>
+                <AvatarSvg config={{ ...config, glasses: gl }} size={56} />
+              </Swatch>
+            ))}
+            <div style={{ width: '100%', borderTop: 'var(--border)', margin: '4px 0' }} />
+            <Swatch selected={config.earrings === null} onClick={() => set({ earrings: null })}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#3a3455' }}>בלי עגילים</span>
+            </Swatch>
+            {EARRINGS.map((er) => (
+              <Swatch key={er} selected={config.earrings === er} onClick={() => set({ earrings: er })}>
+                <AvatarSvg config={{ ...config, earrings: er }} size={56} />
               </Swatch>
             ))}
           </>
@@ -190,13 +204,16 @@ export function ProfileScreen() {
         className="btn btn--teal"
         onClick={async () => {
           const ok = await enablePush(me.id)
-          setPushMsg(ok ? 'התראות פועלות! 🔔' : 'לא ניתן להפעיל התראות במכשיר זה')
+          setPushMsg(ok ? 'התראות פועלות 🔔' : 'לא ניתן להפעיל התראות במכשיר זה')
           setTimeout(() => setPushMsg(''), 2500)
         }}
       >
         🔔 הפעלת התראות במכשיר הזה
       </button>
       {pushMsg && <div style={{ textAlign: 'center', fontWeight: 700 }}>{pushMsg}</div>}
+      <div style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--ink-soft)' }}>
+        אוואטרים: Adventurer by Lisa Wischofsky (CC BY 4.0)
+      </div>
     </div>
   )
 }

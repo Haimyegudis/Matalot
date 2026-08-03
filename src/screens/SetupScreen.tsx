@@ -4,6 +4,7 @@ import { hashPin } from '../lib/pin'
 import { useSession } from '../lib/session'
 import { DEFAULT_AVATAR, DEFAULT_AVATAR_GIRL } from '../lib/avatarOptions'
 
+
 function GenderPick({
   value, onChange, labels,
 }: {
