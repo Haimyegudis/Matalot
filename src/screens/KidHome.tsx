@@ -114,6 +114,17 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   async function pickFromCatalog(choreId: string, childId: string | null = null) {
     await data.addDayPick(choreId, me.id, childId)
     showToast('נוספה להיום ✓')
+    if (me.role === 'parent') {
+      const chore = data.chores.find((c) => c.id === choreId)
+      const recipients = childId
+        ? [childId]
+        : chore?.assigned_to
+          ? [chore.assigned_to]
+          : kids.map((k) => k.id)
+      supabase.functions
+        .invoke('send-push', { body: { kind: 'assigned', profileIds: recipients, title: chore?.title ?? 'מטלה' } })
+        .catch(() => {})
+    }
   }
 
   return (

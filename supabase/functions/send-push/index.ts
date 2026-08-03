@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(jwt)
     if (userErr || !userData.user) return new Response('unauthorized', { status: 401 })
 
-    const { kind, profileId, title, senderName } = await req.json()
+    const { kind, profileId, profileIds, title, senderName, timeLabel } = await req.json()
 
     const { data: family } = await supabaseAdmin
       .from('families')
@@ -29,6 +29,43 @@ Deno.serve(async (req) => {
       .eq('owner_uid', userData.user.id)
       .single()
     if (!family) return new Response('no family', { status: 404 })
+
+    // parent assigned a chore/task — instant heads-up to the kid(s)
+    if (kind === 'assigned') {
+      const ids: string[] = Array.isArray(profileIds) ? profileIds : []
+      if (ids.length === 0) return Response.json({ sent: 0 })
+      const { data: targets } = await supabaseAdmin
+        .from('profiles')
+        .select('id, family_id')
+        .in('id', ids)
+      if (!targets || targets.some((t) => t.family_id !== family.id)) {
+        return new Response('bad profile', { status: 403 })
+      }
+
+      const { data: subs } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .in('profile_id', ids)
+
+      const payload = JSON.stringify({
+        title: '📌 מטלה חדשה',
+        body: `${title || 'מטלה'}${timeLabel ? ` · עד ${timeLabel}` : ''}`,
+        url: '/',
+      })
+      let sent = 0
+      for (const sub of subs ?? []) {
+        try {
+          await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload)
+          sent++
+        } catch (err) {
+          const status = (err as { statusCode?: number }).statusCode
+          if (status === 404 || status === 410) {
+            await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id)
+          }
+        }
+      }
+      return Response.json({ sent })
+    }
 
     // parent-initiated instant nudge to a specific kid's devices
     if (kind === 'nudge') {

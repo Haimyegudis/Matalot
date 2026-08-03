@@ -86,14 +86,27 @@ export function NewTask({ onCreated }: { onCreated: () => void }) {
 
   async function create() {
     setBusy(true)
+    const taskTitle = title.trim() || ICON_LABELS[icon] || 'משימה'
     await supabase.from('tasks').insert({
       family_id: family!.id,
       child_id: childId,
-      title: title.trim() || ICON_LABELS[icon] || 'משימה',
+      title: taskTitle,
       icon,
       points,
       remind_at: remindAt ? new Date(remindAt).toISOString() : null,
     })
+    supabase.functions
+      .invoke('send-push', {
+        body: {
+          kind: 'assigned',
+          profileIds: [childId],
+          title: taskTitle,
+          timeLabel: remindAt
+            ? new Date(remindAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+            : null,
+        },
+      })
+      .catch(() => {})
     setBusy(false)
     setDone(true)
     setTimeout(() => {

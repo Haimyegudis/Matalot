@@ -83,6 +83,12 @@ export function ManageChores({ data }: { data: FamilyData }) {
           child_id: draft.assigned_to,
           remind_at: remindAt,
         })
+        const recipients = draft.assigned_to ? [draft.assigned_to] : kids.map((k) => k.id)
+        supabase.functions
+          .invoke('send-push', {
+            body: { kind: 'assigned', profileIds: recipients, title: draft.title, timeLabel: draft.remindTime || null },
+          })
+          .catch(() => {})
       }
     }
     await data.refetch()
