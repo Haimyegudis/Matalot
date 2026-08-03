@@ -19,6 +19,8 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const [newIcon, setNewIcon] = useState('star')
   const me = currentProfile!
   const kids = profiles.filter((p) => p.role === 'child')
+  // parents watch — only kids mark completions
+  const viewOnly = yesterday || me.role === 'parent'
 
   const target = new Date()
   if (yesterday) target.setDate(target.getDate() - 1)
@@ -145,7 +147,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           kids={kids}
           currentKid={me}
           day={day}
-          readonly={yesterday}
+          readonly={viewOnly}
           onDone={() => doChore(showerChore.id)}
         />
       )}
@@ -165,7 +167,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
               doneByNames={names}
               doneByMe={mine}
               assignedOther={assignedOther}
-              readonly={yesterday}
+              readonly={viewOnly}
               onDone={() => doChore(chore.id)}
             />
           )
@@ -236,7 +238,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
                       </div>
                     )}
                   </div>
-                  {!yesterday && !closed && (
+                  {!viewOnly && !closed && (
                     <button
                       className="btn btn--ghost"
                       style={{ padding: '7px 14px', fontSize: '0.85rem' }}
