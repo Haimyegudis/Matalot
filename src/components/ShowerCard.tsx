@@ -18,9 +18,14 @@ export function ShowerCard({
     .filter((c) => c.chore_id === chore.id && c.day === day && !c.revoked_by)
     .sort((a, b) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime())
   const mine = todayRows.some((c) => c.profile_id === currentKid.id)
-  // once someone showered, the sibling is explicitly next in turn
+  // once someone showered, the sibling is explicitly next in turn;
+  // once everyone did, tonight's first determines tomorrow's first
   const showered = new Set(todayRows.map((c) => c.profile_id))
   const pendingKid = todayRows.length > 0 ? kids.find((k) => !showered.has(k.id)) : undefined
+  const tomorrowFirst =
+    todayRows.length > 0 && !pendingKid
+      ? kids.find((k) => k.id !== todayRows[0].profile_id)
+      : undefined
   const phrase = (k: Profile, text: string) =>
     k.id === currentKid.id ? `${k.name}, ${g(k, 'אתה', 'את')} ${text}` : `${k.name} ${text}`
   const suggested = showerFirstTonight(
@@ -71,6 +76,11 @@ export function ShowerCard({
             {pendingKid && (
               <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--sky)' }}>
                 {phrase(pendingKid, `${g(pendingKid, 'הבא', 'הבאה')} בתור 🚿`)}
+              </div>
+            )}
+            {tomorrowFirst && (
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--sky)' }}>
+                מחר {phrase(tomorrowFirst, `${g(tomorrowFirst, 'מתקלח ראשון', 'מתקלחת ראשונה')} 🚿`)}
               </div>
             )}
           </>
