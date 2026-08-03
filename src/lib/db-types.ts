@@ -32,6 +32,7 @@ export interface Chore {
   id: string
   family_id: string
   title: string
+  note: string | null
   icon: string
   points: number
   assigned_to: string | null

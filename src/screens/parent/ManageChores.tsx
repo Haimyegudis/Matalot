@@ -9,6 +9,7 @@ import { Sheet } from '../../components/Sheet'
 interface Draft {
   id?: string
   title: string
+  note: string
   icon: string
   points: number
   per_day: number
@@ -36,12 +37,13 @@ export function ManageChores({ data }: { data: FamilyData }) {
     if (draft.id) {
       await supabase
         .from('chores')
-        .update({ title: draft.title, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, days: draft.days, assigned_to: draft.assigned_to })
+        .update({ title: draft.title, note: draft.note.trim() || null, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, days: draft.days, assigned_to: draft.assigned_to })
         .eq('id', draft.id)
     } else {
       await supabase.from('chores').insert({
         family_id: family!.id,
         title: draft.title,
+        note: draft.note.trim() || null,
         icon: draft.icon,
         points: draft.points,
         per_day: draft.per_day,
@@ -68,7 +70,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         <button
           key={c.id}
           className="card"
-          onClick={() => setDraft({ id: c.id, title: c.title, icon: c.icon, points: c.points, per_day: c.per_day ?? 1, track_only: c.track_only ?? false, days: c.days, assigned_to: c.assigned_to })}
+          onClick={() => setDraft({ id: c.id, title: c.title, note: c.note ?? '', icon: c.icon, points: c.points, per_day: c.per_day ?? 1, track_only: c.track_only ?? false, days: c.days, assigned_to: c.assigned_to })}
           style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', textAlign: 'start' }}
         >
           <ChoreIcon name={c.icon} size={40} />
@@ -95,7 +97,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         </div>
       )}
 
-      <button className="btn" onClick={() => setDraft({ title: '', icon: 'star', points: 1, per_day: 1, track_only: false, days: [], assigned_to: null })}>
+      <button className="btn" onClick={() => setDraft({ title: '', note: '', icon: 'star', points: 1, per_day: 1, track_only: false, days: null, assigned_to: null })}>
         ➕ מטלה חדשה
       </button>
 
@@ -107,6 +109,13 @@ export function ManageChores({ data }: { data: FamilyData }) {
               value={draft.title}
               placeholder="שם המטלה"
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+            />
+            <textarea
+              value={draft.note}
+              placeholder="הערה לילדים (אופציונלי) — למשל: לחכות שתעשה קקי"
+              rows={2}
+              onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+              style={{ resize: 'none' }}
             />
             <IconPicker value={draft.icon} onChange={(k) => setDraft({ ...draft, icon: k })} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

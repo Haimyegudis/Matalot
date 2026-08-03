@@ -16,6 +16,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const [adding, setAdding] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newIcon, setNewIcon] = useState('star')
+  const [newNote, setNewNote] = useState('')
   const [newAssignee, setNewAssignee] = useState<string | null>(null)
   const me = currentProfile!
   const kids = profiles.filter((p) => p.role === 'child')
@@ -65,6 +66,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
     const { error } = await supabase.from('chores').insert({
       family_id: me.family_id,
       title: newTitle.trim() || ICON_LABELS[newIcon] || 'מטלה',
+      note: newNote.trim() || null,
       icon: newIcon,
       points: 1,
       per_day: 1,
@@ -77,6 +79,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
       setAdding(false)
       setNewTitle('')
       setNewIcon('star')
+      setNewNote('')
       setNewAssignee(null)
       showToast('המטלה נוספה! ✓')
     }
@@ -197,6 +200,13 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
         <div style={{ display: 'grid', gap: 12, paddingBottom: 8 }}>
           <h2 style={{ fontSize: '1.15rem' }}>מטלה חדשה</h2>
           <input value={newTitle} placeholder="שם המטלה (לא חובה — יילקח מהאייקון)" onChange={(e) => setNewTitle(e.target.value)} />
+          <textarea
+            value={newNote}
+            placeholder="הערה (אופציונלי) — למשל: במיוחד את החדר של מיה"
+            rows={2}
+            onChange={(e) => setNewNote(e.target.value)}
+            style={{ resize: 'none' }}
+          />
           <IconPicker value={newIcon} onChange={setNewIcon} />
           {me.role === 'parent' && (
             <div style={{ display: 'grid', gap: 6 }}>

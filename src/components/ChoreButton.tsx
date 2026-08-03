@@ -61,6 +61,21 @@ export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, assignedO
         <ChoreIcon name={chore.icon} size={58} />
       </span>
       <span style={{ fontWeight: 700, fontSize: '0.95rem', lineHeight: 1.2 }}>{chore.title}</span>
+      {chore.note && (
+        <span
+          style={{
+            fontSize: '0.72rem',
+            color: 'var(--ink-soft)',
+            lineHeight: 1.25,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
+          {chore.note}
+        </span>
+      )}
       {assignedOther && (
         <span style={{ fontSize: '0.7rem', color: 'var(--sky)', fontWeight: 600 }}>
           של {assignedOther}

@@ -213,7 +213,7 @@ export const CHORE_ICONS: Record<string, ReactNode> = {
 
 export const ICON_KEYS = [
   'trash', 'dishwasher', 'robotvac', 'spitz', 'dryer', 'shower',
-  'english', 'pencil', 'notebook', 'board', 'gradcap', 'music',
+  'english', 'pencil', 'board', 'gradcap',
   'bed', 'book', 'star', 'broom', 'plant', 'dishes', 'laundry', 'toys',
 ]
 
