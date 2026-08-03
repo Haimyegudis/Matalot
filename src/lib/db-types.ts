@@ -75,6 +75,10 @@ export interface DayPick {
   chore_id: string
   day: string
   added_by: string | null
+  /** null = both kids */
+  child_id: string | null
+  remind_at: string | null
+  reminded_at: string | null
 }
 
 export interface PushSubscriptionRow {

@@ -1,4 +1,4 @@
-import type { Chore, Completion, Profile, TaskRow } from './db-types'
+import type { Chore, Completion, DayPick, Profile, TaskRow } from './db-types'
 
 export function dayKey(d: Date): string {
   const y = d.getFullYear()
@@ -45,6 +45,23 @@ export function weeklyScores(
     scores[task.child_id] += task.points
   }
   return scores
+}
+
+/** Chore ids picked into `day` that `viewerId` should see; null viewer (parent) sees all. */
+export function pickedChoreIds(picks: DayPick[], day: string, viewerId: string | null): Set<string> {
+  return new Set(
+    picks
+      .filter((p) => p.day === day && (viewerId === null || p.child_id === null || p.child_id === viewerId))
+      .map((p) => p.chore_id),
+  )
+}
+
+/** First (earliest) live completion of `choreId` on `day`, or null. */
+export function showerFirstOn(completions: Completion[], choreId: string, day: string): string | null {
+  const rows = completions
+    .filter((c) => c.chore_id === choreId && c.day === day && !c.revoked_by)
+    .sort((a, b) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime())
+  return rows[0]?.profile_id ?? null
 }
 
 /**
