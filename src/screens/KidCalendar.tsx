@@ -73,8 +73,9 @@ export function KidCalendar({ data }: { data: FamilyData }) {
                 style={{
                   aspectRatio: '1',
                   borderRadius: 12,
-                  border: isToday ? '2.5px solid var(--grape)' : '2px solid transparent',
-                  background: pts > 0 ? 'var(--sunny)' : 'rgba(43,33,69,.04)',
+                  border: isToday ? '2px solid var(--grape)' : '2px solid transparent',
+                  background: pts > 0 ? 'rgba(251,191,36,.18)' : 'rgba(255,255,255,.045)',
+                  color: pts > 0 ? 'var(--sunny)' : 'var(--ink)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -84,7 +85,7 @@ export function KidCalendar({ data }: { data: FamilyData }) {
                 }}
               >
                 {d}
-                {pts > 0 && <span style={{ fontSize: '0.68rem', color: 'var(--ink)' }}>⭐{pts}</span>}
+                {pts > 0 && <span style={{ fontSize: '0.68rem' }}>+{pts}</span>}
               </button>
             )
           })}

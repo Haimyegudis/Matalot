@@ -1,9 +1,9 @@
 import { NavLink } from 'react-router-dom'
 
 const tabs = [
-  { to: '/', label: 'היום', emoji: '🏠' },
+  { to: '/', label: 'היום', emoji: '⚡' },
   { to: '/calendar', label: 'יומן', emoji: '📅' },
-  { to: '/profile', label: 'פרופיל', emoji: '🧒' },
+  { to: '/profile', label: 'פרופיל', emoji: '👤' },
 ]
 
 export function BottomNav() {

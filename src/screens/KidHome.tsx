@@ -49,8 +49,8 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
     <div className="screen" style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem' }}>
-            {yesterday ? 'אתמול' : `היי ${me.name}! ✨`}
+          <h1 style={{ fontSize: '1.55rem' }}>
+            {yesterday ? 'אתמול' : `היי ${me.name}`}
           </h1>
           <div style={{ color: 'var(--ink-soft)', fontSize: '0.85rem', fontWeight: 600 }}>{dateLabel}</div>
         </div>
@@ -67,7 +67,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
 
       {!yesterday && myTasks.length > 0 && (
         <section style={{ display: 'grid', gap: 10 }}>
-          <h2 style={{ fontSize: '1.1rem' }}>משימות בשבילך 📌</h2>
+          <h2 style={{ fontSize: '1.05rem' }}>משימות בשבילך</h2>
           {myTasks.map((t) => (
             <div
               key={t.id}
@@ -77,7 +77,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
                 alignItems: 'center',
                 gap: 12,
                 padding: '12px 14px',
-                background: t.status === 'done' ? 'rgba(43,33,69,.05)' : 'linear-gradient(135deg, rgba(255,197,61,.25), #fff 60%)',
+                background: t.status === 'done' ? 'rgba(255,255,255,.025)' : 'linear-gradient(135deg, rgba(251,191,36,.16), rgba(255,255,255,.03) 60%)',
               }}
             >
               <ChoreIcon name={t.icon} size={40} />
@@ -144,8 +144,9 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
             bottom: 'calc(var(--nav-h) + 16px)',
             insetInlineStart: '50%',
             transform: 'translateX(50%)',
-            background: 'var(--ink)',
+            background: '#2a2440',
             color: '#fff',
+            border: 'var(--border)',
             borderRadius: 999,
             padding: '10px 20px',
             fontWeight: 600,

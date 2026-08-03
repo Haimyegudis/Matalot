@@ -35,7 +35,7 @@ export function ShowerCard({
         alignItems: 'center',
         gap: 14,
         padding: '14px 16px',
-        background: 'linear-gradient(135deg, rgba(76,201,240,.18), #fff 65%)',
+        background: 'linear-gradient(135deg, rgba(34,211,238,.16), rgba(255,255,255,.03) 65%)',
       }}
     >
       <span style={{ width: 52, height: 52, flexShrink: 0 }}>

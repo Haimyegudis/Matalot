@@ -40,8 +40,10 @@ function GenderPick({
 
 const DEFAULT_CHORES = [
   { title: 'לזרוק זבל', icon: 'trash', sort: 0 },
-  { title: 'מים לרוקי', icon: 'robot', sort: 1 },
-  { title: 'טיול עם שלג', icon: 'dog', sort: 2 },
+  { title: 'לפנות מדיח', icon: 'dishwasher', sort: 1 },
+  { title: 'לנקות את רוקי', icon: 'robotvac', sort: 2 },
+  { title: 'להוציא את שלג לטיול', icon: 'spitz', sort: 3 },
+  { title: 'בגדים למייבש כביסה', icon: 'dryer', sort: 4 },
 ]
 
 export function SetupScreen() {
@@ -119,8 +121,17 @@ export function SetupScreen() {
   return (
     <div className="screen" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 18, paddingBottom: 40 }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '3.4rem', animation: 'float-slow 3s ease-in-out infinite' }}>🏠</div>
-        <h1 style={{ fontSize: '2.2rem', color: 'var(--grape)' }}>מטלות</h1>
+        <h1
+          style={{
+            fontSize: '2.4rem',
+            background: 'linear-gradient(135deg, var(--grape), var(--sky))',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent',
+          }}
+        >
+          מטלות
+        </h1>
         <p style={{ color: 'var(--ink-soft)', margin: '4px 0 0' }}>
           {step === 1 ? 'מתחברים לחשבון המשפחה' : 'עוד רגע מתחילים!'}
         </p>
@@ -156,7 +167,7 @@ export function SetupScreen() {
           <input value={kid2} onChange={(e) => setKid2(e.target.value)} placeholder="שם ילד/ה 2" />
           <GenderPick value={kid2Gender} onChange={setKid2Gender} labels={['בן', 'בת']} />
           <button className="btn btn--teal" onClick={handleCreateFamily} disabled={busy}>
-            {busy ? '...' : 'יוצרים את המשפחה! 🎉'}
+            {busy ? '...' : 'יוצרים את המשפחה'}
           </button>
         </div>
       )}

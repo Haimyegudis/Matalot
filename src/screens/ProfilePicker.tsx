@@ -13,7 +13,7 @@ export function ProfilePicker() {
 
   return (
     <div className="screen" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 24, paddingBottom: 40 }}>
-      <h1 style={{ textAlign: 'center', fontSize: '1.9rem', color: 'var(--grape)' }}>מי את/ה? 👋</h1>
+      <h1 style={{ textAlign: 'center', fontSize: '1.8rem' }}>מי מתחבר?</h1>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {profiles.map((p, i) => (
           <button

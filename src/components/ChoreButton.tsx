@@ -34,50 +34,43 @@ export function ChoreButton({ chore, doneBy, doneByMe, readonly, onDone }: Props
     <button
       onClick={handleTap}
       disabled={readonly && !done}
+      className="card"
       style={{
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: 8,
-        padding: '18px 10px 14px',
+        padding: '16px 10px 14px',
         minHeight: 132,
-        background: done ? 'rgba(43,33,69,.05)' : 'var(--paper)',
-        border: 'var(--border)',
-        borderRadius: 'var(--r-md)',
-        boxShadow: done ? 'none' : 'var(--pop)',
-        transition: 'transform .08s ease, box-shadow .08s ease',
-        opacity: done && !doneByMe ? 0.75 : 1,
+        background: done ? 'rgba(255,255,255,.025)' : undefined,
+        boxShadow: doneByMe ? 'var(--glow-lime)' : undefined,
+        transition: 'transform .1s ease, box-shadow .2s ease',
+        opacity: done && !doneByMe ? 0.55 : 1,
       }}
     >
-      <span
-        style={{
-          width: 56,
-          height: 56,
-          filter: done ? 'grayscale(0.7) opacity(0.6)' : 'none',
-          animation: done ? 'none' : 'float-slow 3.2s ease-in-out infinite',
-        }}
-      >
-        <ChoreIcon name={chore.icon} size={56} />
+      <span style={{ filter: done ? 'grayscale(0.75) opacity(0.55)' : 'none' }}>
+        <ChoreIcon name={chore.icon} size={58} />
       </span>
-      <span style={{ fontWeight: 600, fontSize: '0.98rem', lineHeight: 1.2 }}>{chore.title}</span>
+      <span style={{ fontWeight: 700, fontSize: '0.95rem', lineHeight: 1.2 }}>{chore.title}</span>
 
       {done ? (
-        <span style={{ fontSize: '0.8rem', color: doneByMe ? 'var(--good)' : 'var(--ink-soft)', fontWeight: 600 }}>
-          {doneByMe ? '✓ עשיתי!' : `בוצע ע"י ${doneBy}`}
+        <span style={{ fontSize: '0.8rem', color: doneByMe ? 'var(--good)' : 'var(--ink-soft)', fontWeight: 700 }}>
+          {doneByMe ? '✓ בוצע' : `בוצע ע"י ${doneBy}`}
         </span>
       ) : (
         <span
           style={{
-            fontSize: '0.78rem',
-            background: 'var(--sunny)',
-            border: '2px solid rgba(43,33,69,.16)',
+            fontSize: '0.76rem',
+            background: 'rgba(251,191,36,.14)',
+            color: 'var(--sunny)',
+            border: '1px solid rgba(251,191,36,.35)',
             borderRadius: 999,
             padding: '2px 10px',
             fontWeight: 700,
           }}
         >
-          {chore.points === 1 ? 'נקודה' : `${chore.points} נקודות`}
+          {chore.points === 1 ? '+1' : `+${chore.points}`}
         </span>
       )}
 
@@ -85,18 +78,18 @@ export function ChoreButton({ chore, doneBy, doneByMe, readonly, onDone }: Props
         <span
           style={{
             position: 'absolute',
-            top: -10,
-            insetInlineEnd: -6,
-            width: 30,
-            height: 30,
+            top: -8,
+            insetInlineEnd: -5,
+            width: 26,
+            height: 26,
             borderRadius: '50%',
             background: 'var(--good)',
-            color: '#fff',
+            color: '#101505',
             display: 'grid',
             placeItems: 'center',
-            fontSize: '1rem',
-            border: '2.5px solid #fff',
-            boxShadow: 'var(--pop)',
+            fontSize: '0.9rem',
+            fontWeight: 800,
+            boxShadow: 'var(--glow-lime)',
             animation: 'pop-in .3s ease',
           }}
         >

@@ -1,35 +1,38 @@
-/* ── Matalot design tokens: candy board-game look ─────────────── */
+/* ── Matalot design tokens: "Night Arcade" — dark, electric, tween-grade ── */
 :root {
   /* surfaces */
-  --bg: #fff7ea;            /* warm cream */
-  --paper: #ffffff;
-  --ink: #2b2145;           /* deep plum text */
-  --ink-soft: #6f6590;
-  --line: rgba(43, 33, 69, 0.14);
+  --bg: #0f0d1a;             /* deep space navy */
+  --paper: #1b1729;          /* card surface */
+  --raise: #241f38;          /* raised surface (inputs, keys) */
+  --ink: #f2efff;            /* near-white text */
+  --ink-soft: #9a93b8;       /* muted text */
+  --line: rgba(255, 255, 255, 0.09);
 
-  /* candy palette */
-  --coral: #ff6b6b;
-  --teal: #2ec4b6;
-  --sunny: #ffc53d;
-  --grape: #9b5de5;
-  --sky: #4cc9f0;
-  --mint: #9bf6b0;
+  /* electric accents */
+  --coral: #fb7185;
+  --teal: #2dd4bf;
+  --sunny: #fbbf24;
+  --grape: #8b5cf6;
+  --sky: #22d3ee;
+  --mint: #a3e635;
 
   --accent: var(--grape);
-  --good: #23a94d;
-  --bad: #e5484d;
+  --good: #a3e635;
+  --bad: #f87171;
 
-  /* board-game hard shadows */
-  --pop: 0 4px 0 rgba(43, 33, 69, 0.16);
-  --pop-lg: 0 7px 0 rgba(43, 33, 69, 0.16);
-  --border: 2.5px solid rgba(43, 33, 69, 0.16);
+  /* soft depth + glow */
+  --pop: 0 6px 20px rgba(0, 0, 0, 0.35);
+  --pop-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --glow-grape: 0 0 24px rgba(139, 92, 246, 0.35);
+  --glow-lime: 0 0 20px rgba(163, 230, 53, 0.3);
+  --border: 1px solid rgba(255, 255, 255, 0.09);
 
-  --r-sm: 14px;
-  --r-md: 20px;
-  --r-lg: 28px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 24px;
 
-  --font-display: 'Secular One', 'Rubik', sans-serif;
-  --font-body: 'Rubik', 'Varela Round', sans-serif;
+  --font-display: 'Rubik', 'Heebo', sans-serif;
+  --font-body: 'Heebo', 'Rubik', sans-serif;
 
-  --nav-h: 72px;
+  --nav-h: 68px;
 }

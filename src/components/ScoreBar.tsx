@@ -16,12 +16,12 @@ export function ScoreBar({
         justifyContent: 'space-around',
         alignItems: 'center',
         padding: '12px 8px',
-        background: 'linear-gradient(135deg, #fff 60%, rgba(255,197,61,.25))',
+        background: 'linear-gradient(135deg, rgba(139,92,246,.16), rgba(34,211,238,.07))',
       }}
     >
       {kids.map((k) => (
-        <div key={k.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ animation: k.id === currentId ? 'wiggle 2.5s ease-in-out infinite' : 'none' }}>
+        <div key={k.id} style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: currentId && k.id !== currentId ? 0.8 : 1 }}>
+          <span>
             <ProfileFace profile={k} size={46} />
           </span>
           <div style={{ textAlign: 'start' }}>

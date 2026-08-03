@@ -95,7 +95,7 @@ export function WeekBoard({ data }: { data: FamilyData }) {
                       flexWrap: 'wrap',
                       gap: 4,
                       alignItems: 'center',
-                      background: isToday ? 'rgba(155,93,229,.06)' : 'var(--paper)',
+                      background: isToday ? 'rgba(139,92,246,.12)' : undefined,
                     }}
                   >
                     {cell.map((c) => (

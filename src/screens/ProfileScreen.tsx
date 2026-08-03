@@ -24,8 +24,8 @@ function Swatch({ selected, onClick, children }: { selected: boolean; onClick: (
         width: 64,
         height: 64,
         borderRadius: 16,
-        border: selected ? '3.5px solid var(--grape)' : 'var(--border)',
-        background: 'var(--paper)',
+        border: selected ? '3px solid var(--grape)' : '2px solid transparent',
+        background: '#f5f2ff',
         display: 'grid',
         placeItems: 'center',
         boxShadow: selected ? 'var(--pop)' : 'none',
@@ -81,7 +81,7 @@ export function ProfileScreen() {
       <div style={{ display: 'grid', placeItems: 'center', position: 'relative' }}>
         <div
           className="card"
-          style={{ borderRadius: '50%', padding: 10, background: `linear-gradient(135deg, #fff, ${me.color}22)` }}
+          style={{ borderRadius: '50%', padding: 10, background: '#f5f2ff', boxShadow: `0 0 28px ${me.color}55` }}
         >
           {me.photo_url ? (
             <img src={me.photo_url} alt="" width={150} height={150} style={{ borderRadius: '50%', objectFit: 'cover', display: 'block' }} />

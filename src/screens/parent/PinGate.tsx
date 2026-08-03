@@ -42,7 +42,7 @@ export function PinGate({ children }: { children: ReactNode }) {
             key={i}
             style={{
               width: 16, height: 16, borderRadius: '50%',
-              background: i < pin.length ? 'var(--grape)' : 'rgba(43,33,69,.15)',
+              background: i < pin.length ? 'var(--grape)' : 'rgba(255,255,255,.15)',
               animation: wrong ? 'wiggle .3s ease 2' : 'none',
             }}
           />
