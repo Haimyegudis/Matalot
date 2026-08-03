@@ -40,14 +40,15 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const viewerId = me.role === 'parent' ? null : me.id
   const pickedToday = pickedChoreIds(data.dayPicks, day, viewerId)
   const todayPicks = data.dayPicks.filter((p) => p.day === day)
+  // catalog chores live on the board by pick scope alone — a pick for a specific
+  // kid overrides the chore's permanent assignment for that day
   const activeChores = data.chores.filter(
     (c) =>
-      mine(c) &&
-      (c.days === null
-        ? true
-        : c.days.length > 0
-          ? c.days.includes(dow)
-          : pickedToday.has(c.id)),
+      c.active &&
+      !c.is_shower &&
+      (c.days !== null && c.days.length === 0
+        ? pickedToday.has(c.id)
+        : mine(c) && (c.days === null || c.days.includes(dow))),
   )
   // a catalog chore stays listed until it's covered for everyone it can apply to
   const coveredForAll = (choreId: string) =>
@@ -55,10 +56,9 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
     kids.every((k) => todayPicks.some((p) => p.chore_id === choreId && p.child_id === k.id))
   const catalogChores = data.chores.filter(
     (c) =>
-      mine(c) &&
       c.days !== null &&
       c.days.length === 0 &&
-      (me.role === 'parent' && !c.assigned_to ? !coveredForAll(c.id) : !pickedToday.has(c.id)),
+      (me.role === 'parent' ? c.active && !c.is_shower && !coveredForAll(c.id) : mine(c) && !pickedToday.has(c.id)),
   )
   const showerChore = data.chores.find((c) => c.is_shower && c.active)
 
@@ -111,20 +111,10 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
     }
   }
 
+  // the server cron notifies the kid about the new pick (≤1 min)
   async function pickFromCatalog(choreId: string, childId: string | null = null) {
     await data.addDayPick(choreId, me.id, childId)
     showToast('נוספה להיום ✓')
-    if (me.role === 'parent') {
-      const chore = data.chores.find((c) => c.id === choreId)
-      const recipients = childId
-        ? [childId]
-        : chore?.assigned_to
-          ? [chore.assigned_to]
-          : kids.map((k) => k.id)
-      supabase.functions
-        .invoke('send-push', { body: { kind: 'assigned', profileIds: recipients, title: chore?.title ?? 'מטלה' } })
-        .catch(() => {})
-    }
   }
 
   return (
@@ -218,7 +208,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
               (p.child_id === null || me.role === 'parent' || p.child_id === me.id),
           )
           const pickedFor =
-            me.role === 'parent' && !chore.assigned_to
+            me.role === 'parent'
               ? todayPicks.find((p) => p.chore_id === chore.id && p.child_id)?.child_id ?? null
               : null
           // parent can remove a chore that was pulled onto today's board
@@ -232,10 +222,10 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
               doneByNames={names}
               doneByMe={mine}
               assignedOther={
-                me.role === 'parent' && chore.assigned_to
-                  ? nameOf(chore.assigned_to)
-                  : pickedFor
-                    ? `${nameOf(pickedFor)} היום`
+                pickedFor
+                  ? `${nameOf(pickedFor)} היום`
+                  : me.role === 'parent' && chore.assigned_to
+                    ? nameOf(chore.assigned_to)
                     : null
               }
               remindLabel={
@@ -320,7 +310,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
                       {(c.per_day ?? 1) > 1 ? ` · ×${c.per_day}` : ''}
                     </div>
                   </div>
-                  {me.role === 'parent' && !c.assigned_to ? (
+                  {me.role === 'parent' ? (
                     <div style={{ display: 'grid', gap: 4 }}>
                       {[{ id: null as string | null, name: 'שניהם' }, ...kids].map((k) => {
                         const covered =

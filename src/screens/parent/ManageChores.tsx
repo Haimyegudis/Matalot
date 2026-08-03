@@ -90,17 +90,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
           child_id: draft.assigned_to,
           remind_at: remindAt,
         })
-        const d = new Date(`${draft.pickDay}T12:00:00`)
-        const timeLabel =
-          draft.pickDay === todayStr
-            ? draft.remindTime ? `עד ${draft.remindTime}` : null
-            : `${d.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'numeric' })}${draft.remindTime ? ` בשעה ${draft.remindTime}` : ''}`
-        const recipients = draft.assigned_to ? [draft.assigned_to] : kids.map((k) => k.id)
-        supabase.functions
-          .invoke('send-push', {
-            body: { kind: 'assigned', profileIds: recipients, title: draft.title, timeLabel },
-          })
-          .catch(() => {})
+        // the server cron notifies the kid about the new pick (≤1 min)
       }
     }
     await data.refetch()

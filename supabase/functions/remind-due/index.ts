@@ -160,5 +160,70 @@ Deno.serve(async () => {
     }
   }
 
-  return Response.json({ due: due?.length ?? 0, nudges: dueNudges?.length ?? 0, picks: duePicks?.length ?? 0, sent })
+  // freshly-assigned picks — instant-ish "new chore" heads-up (≤1 min after assignment)
+  const { data: newPicks } = await supabaseAdmin
+    .from('day_picks')
+    .select('*, chores(title, assigned_to)')
+    .is('notified_at', null)
+    .limit(50)
+
+  const todayIL = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date())
+  for (const pick of newPicks ?? []) {
+    const { data: claimed } = await supabaseAdmin
+      .from('day_picks')
+      .update({ notified_at: new Date().toISOString() })
+      .eq('id', pick.id)
+      .is('notified_at', null)
+      .select()
+    if (!claimed || claimed.length === 0) continue
+
+    const chore = (pick as { chores?: { title?: string; assigned_to?: string | null } }).chores
+    let recipients: string[]
+    if (pick.child_id) recipients = [pick.child_id]
+    else if (chore?.assigned_to) recipients = [chore.assigned_to]
+    else {
+      const { data: kidRows } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('family_id', pick.family_id)
+        .eq('role', 'child')
+      recipients = (kidRows ?? []).map((k) => k.id)
+    }
+
+    const timePart = pick.remind_at
+      ? new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }).format(new Date(pick.remind_at))
+      : null
+    const dayStr = String(pick.day).slice(0, 10)
+    const datePart = dayStr !== todayIL
+      ? new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', weekday: 'short', day: 'numeric', month: 'numeric' }).format(new Date(`${dayStr}T12:00:00`))
+      : null
+    const suffix = datePart
+      ? ` · ${datePart}${timePart ? ` בשעה ${timePart}` : ''}`
+      : timePart ? ` · עד ${timePart}` : ''
+
+    const payload = JSON.stringify({
+      title: '📌 מטלה חדשה',
+      body: `${chore?.title ?? 'מטלה'}${suffix}`,
+      url: '/',
+    })
+    for (const rid of recipients) {
+      const { data: subs } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .eq('profile_id', rid)
+      for (const sub of subs ?? []) {
+        try {
+          await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload)
+          sent++
+        } catch (err) {
+          const status = (err as { statusCode?: number }).statusCode
+          if (status === 404 || status === 410) {
+            await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id)
+          }
+        }
+      }
+    }
+  }
+
+  return Response.json({ due: due?.length ?? 0, nudges: dueNudges?.length ?? 0, picks: duePicks?.length ?? 0, newPicks: newPicks?.length ?? 0, sent })
 })
