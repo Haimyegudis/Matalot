@@ -5,6 +5,7 @@ import type { FamilyData } from '../../lib/store'
 import type { Chore } from '../../lib/db-types'
 import { ChoreIcon, IconPicker, ICON_LABELS } from '../../components/icons'
 import { Sheet } from '../../components/Sheet'
+import { dayKey } from '../../lib/logic'
 
 interface Draft {
   id?: string
@@ -17,6 +18,12 @@ interface Draft {
   /** null = daily, [] = general list, [0..6] = specific weekdays */
   days: number[] | null
   assigned_to: string | null
+  /** pulled into today's board (day_pick), on top of days=[] */
+  today: boolean
+  /** "HH:MM" reminder for the today pick; '' = none */
+  remindTime: string
+  /** chore had a today pick when the draft was opened */
+  hadTodayPick: boolean
 }
 
 const DAY_NAMES = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש']
@@ -29,29 +36,54 @@ export function ManageChores({ data }: { data: FamilyData }) {
 
   const active = data.chores.filter((c) => c.active && !c.is_shower)
   const shower = data.chores.find((c) => c.is_shower)
+  const todayStr = dayKey(new Date())
+  const todayPickOf = (choreId: string) =>
+    data.dayPicks.find((p) => p.chore_id === choreId && p.day === todayStr)
 
   async function saveDraft() {
     if (!draft) return
     setBusy(true)
     draft.title = draft.title.trim() || ICON_LABELS[draft.icon] || 'מטלה'
+    const days = draft.today ? [] : draft.days
+    let choreId = draft.id
     if (draft.id) {
       await supabase
         .from('chores')
-        .update({ title: draft.title, note: draft.note.trim() || null, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, days: draft.days, assigned_to: draft.assigned_to })
+        .update({ title: draft.title, note: draft.note.trim() || null, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, days, assigned_to: draft.assigned_to })
         .eq('id', draft.id)
     } else {
-      await supabase.from('chores').insert({
-        family_id: family!.id,
-        title: draft.title,
-        note: draft.note.trim() || null,
-        icon: draft.icon,
-        points: draft.points,
-        per_day: draft.per_day,
-        track_only: draft.track_only,
-        days: draft.days,
-        assigned_to: draft.assigned_to,
-        sort: active.length,
-      })
+      const { data: created } = await supabase
+        .from('chores')
+        .insert({
+          family_id: family!.id,
+          title: draft.title,
+          note: draft.note.trim() || null,
+          icon: draft.icon,
+          points: draft.points,
+          per_day: draft.per_day,
+          track_only: draft.track_only,
+          days,
+          assigned_to: draft.assigned_to,
+          sort: active.length,
+        })
+        .select()
+        .single()
+      choreId = created?.id
+    }
+    if (choreId && (draft.today || draft.hadTodayPick)) {
+      await supabase.from('day_picks').delete().eq('chore_id', choreId).eq('day', todayStr)
+      if (draft.today) {
+        const remindAt = draft.remindTime
+          ? new Date(`${todayStr}T${draft.remindTime}:00`).toISOString()
+          : null
+        await supabase.from('day_picks').insert({
+          family_id: family!.id,
+          chore_id: choreId,
+          day: todayStr,
+          child_id: draft.assigned_to,
+          remind_at: remindAt,
+        })
+      }
     }
     await data.refetch()
     setBusy(false)
@@ -70,7 +102,17 @@ export function ManageChores({ data }: { data: FamilyData }) {
         <button
           key={c.id}
           className="card"
-          onClick={() => setDraft({ id: c.id, title: c.title, note: c.note ?? '', icon: c.icon, points: c.points, per_day: c.per_day ?? 1, track_only: c.track_only ?? false, days: c.days, assigned_to: c.assigned_to })}
+          onClick={() => {
+            const pick = todayPickOf(c.id)
+            const remind = pick?.remind_at ? new Date(pick.remind_at) : null
+            setDraft({
+              id: c.id, title: c.title, note: c.note ?? '', icon: c.icon, points: c.points,
+              per_day: c.per_day ?? 1, track_only: c.track_only ?? false, days: c.days, assigned_to: c.assigned_to,
+              today: !!pick,
+              remindTime: remind ? `${String(remind.getHours()).padStart(2, '0')}:${String(remind.getMinutes()).padStart(2, '0')}` : '',
+              hadTodayPick: !!pick,
+            })
+          }}
           style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', textAlign: 'start' }}
         >
           <ChoreIcon name={c.icon} size={40} />
@@ -81,6 +123,13 @@ export function ManageChores({ data }: { data: FamilyData }) {
               {c.track_only ? ' · בלי נקודות' : ` · +${c.points}`}
               {(c.per_day ?? 1) > 1 ? ` · ×${c.per_day} ביום` : ''}
               {c.days === null ? ' · יומית' : c.days.length === 0 ? ' · רשימה כללית' : ` · ${c.days.map((d) => DAY_NAMES[d]).join(',')}`}
+              {(() => {
+                const pick = todayPickOf(c.id)
+                if (!pick) return ''
+                if (!pick.remind_at) return ' · היום'
+                const t = new Date(pick.remind_at)
+                return ` · היום ⏰${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`
+              })()}
             </div>
           </div>
           <span style={{ color: 'var(--ink-soft)' }}>✏️</span>
@@ -97,7 +146,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         </div>
       )}
 
-      <button className="btn" onClick={() => setDraft({ title: '', note: '', icon: 'star', points: 1, per_day: 1, track_only: false, days: null, assigned_to: null })}>
+      <button className="btn" onClick={() => setDraft({ title: '', note: '', icon: 'star', points: 1, per_day: 1, track_only: false, days: null, assigned_to: null, today: false, remindTime: '', hadTodayPick: false })}>
         ➕ מטלה חדשה
       </button>
 
@@ -132,18 +181,23 @@ export function ManageChores({ data }: { data: FamilyData }) {
             </div>
             <div style={{ display: 'grid', gap: 8 }}>
               <span style={{ fontWeight: 700 }}>מתי מופיעה:</span>
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {([
+                  ['today', 'היום'],
                   ['daily', 'כל יום'],
                   ['general', 'רשימה כללית'],
                   ['days', 'ימים מסוימים'],
                 ] as const).map(([mode, label]) => {
-                  const current = draft.days === null ? 'daily' : draft.days.length === 0 ? 'general' : 'days'
+                  const current = draft.today ? 'today' : draft.days === null ? 'daily' : draft.days.length === 0 ? 'general' : 'days'
                   return (
                     <button
                       key={mode}
                       onClick={() =>
-                        setDraft({ ...draft, days: mode === 'daily' ? null : mode === 'general' ? [] : [0] })
+                        setDraft({
+                          ...draft,
+                          today: mode === 'today',
+                          days: mode === 'today' || mode === 'general' ? [] : mode === 'daily' ? null : [0],
+                        })
                       }
                       style={{
                         flex: 1,
@@ -160,7 +214,19 @@ export function ManageChores({ data }: { data: FamilyData }) {
                   )
                 })}
               </div>
-              {draft.days !== null && draft.days.length > 0 && (
+              {draft.today && (
+                <label style={{ fontWeight: 700, fontSize: '0.85rem' }}>
+                  ⏰ תזכורת בשעה (אופציונלי)
+                  <input
+                    type="time"
+                    dir="ltr"
+                    value={draft.remindTime}
+                    onChange={(e) => setDraft({ ...draft, remindTime: e.target.value })}
+                    style={{ marginTop: 6 }}
+                  />
+                </label>
+              )}
+              {!draft.today && draft.days !== null && draft.days.length > 0 && (
                 <div style={{ display: 'flex', gap: 5 }}>
                   {DAY_NAMES.map((d, i) => {
                     const on = draft.days!.includes(i)
