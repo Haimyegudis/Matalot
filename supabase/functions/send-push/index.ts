@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(jwt)
     if (userErr || !userData.user) return new Response('unauthorized', { status: 401 })
 
-    const { profileId, title } = await req.json()
+    const { kind, profileId, title, senderName } = await req.json()
 
     const { data: family } = await supabaseAdmin
       .from('families')
@@ -29,6 +29,40 @@ Deno.serve(async (req) => {
       .eq('owner_uid', userData.user.id)
       .single()
     if (!family) return new Response('no family', { status: 404 })
+
+    // parent-initiated instant nudge to a specific kid's devices
+    if (kind === 'nudge') {
+      const { data: target } = await supabaseAdmin
+        .from('profiles')
+        .select('family_id')
+        .eq('id', profileId)
+        .single()
+      if (!target || target.family_id !== family.id) return new Response('bad profile', { status: 403 })
+
+      const { data: subs } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .eq('profile_id', profileId)
+
+      const payload = JSON.stringify({
+        title: senderName ? `📣 ${senderName}` : '📣 תזכורת',
+        body: title || 'יש לך מטלות פתוחות!',
+        url: '/',
+      })
+      let sent = 0
+      for (const sub of subs ?? []) {
+        try {
+          await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload)
+          sent++
+        } catch (err) {
+          const status = (err as { statusCode?: number }).statusCode
+          if (status === 404 || status === 410) {
+            await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id)
+          }
+        }
+      }
+      return Response.json({ sent })
+    }
 
     const { data: actor } = await supabaseAdmin
       .from('profiles')

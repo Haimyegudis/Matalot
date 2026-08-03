@@ -58,5 +58,45 @@ Deno.serve(async () => {
       }
     }
   }
-  return Response.json({ due: due?.length ?? 0, sent })
+  // scheduled parent nudges (notification-only reminders)
+  const { data: dueNudges } = await supabaseAdmin
+    .from('nudges')
+    .select('*')
+    .is('sent_at', null)
+    .lte('remind_at', new Date().toISOString())
+    .limit(50)
+
+  for (const nudge of dueNudges ?? []) {
+    const { data: claimed } = await supabaseAdmin
+      .from('nudges')
+      .update({ sent_at: new Date().toISOString() })
+      .eq('id', nudge.id)
+      .is('sent_at', null)
+      .select()
+    if (!claimed || claimed.length === 0) continue
+
+    const { data: subs } = await supabaseAdmin
+      .from('push_subscriptions')
+      .select('*')
+      .eq('profile_id', nudge.child_id)
+
+    const payload = JSON.stringify({
+      title: nudge.sender_name ? `📣 ${nudge.sender_name}` : '📣 תזכורת',
+      body: nudge.message,
+      url: '/',
+    })
+    for (const sub of subs ?? []) {
+      try {
+        await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload)
+        sent++
+      } catch (err) {
+        const status = (err as { statusCode?: number }).statusCode
+        if (status === 404 || status === 410) {
+          await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id)
+        }
+      }
+    }
+  }
+
+  return Response.json({ due: due?.length ?? 0, nudges: dueNudges?.length ?? 0, sent })
 })
