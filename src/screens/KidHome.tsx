@@ -221,9 +221,12 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
             me.role === 'parent' && !chore.assigned_to
               ? todayPicks.find((p) => p.chore_id === chore.id && p.child_id)?.child_id ?? null
               : null
-          return (
+          // parent can remove a chore that was pulled onto today's board
+          const removable =
+            me.role === 'parent' && !yesterday && chore.days !== null && chore.days.length === 0
+          const btn = (
             <ChoreButton
-              key={chore.id}
+              key={removable ? undefined : chore.id}
               chore={chore}
               doneCount={rows.length}
               doneByNames={names}
@@ -243,6 +246,37 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
               readonly={viewOnly}
               onDone={() => doChore(chore.id)}
             />
+          )
+          if (!removable) return btn
+          return (
+            <div key={chore.id} style={{ position: 'relative', display: 'grid' }}>
+              {btn}
+              <button
+                onClick={async () => {
+                  await data.removeDayPick(chore.id, day)
+                  showToast('הוסרה מהיום ✓')
+                }}
+                aria-label="הסרה מהיום"
+                style={{
+                  position: 'absolute',
+                  top: -7,
+                  insetInlineStart: -5,
+                  width: 26,
+                  height: 26,
+                  borderRadius: '50%',
+                  background: 'var(--bad, #ef4444)',
+                  color: '#fff',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  display: 'grid',
+                  placeItems: 'center',
+                  border: '2px solid rgba(255,255,255,.25)',
+                  zIndex: 2,
+                }}
+              >
+                ✕
+              </button>
+            </div>
           )
         })}
         {!yesterday && (

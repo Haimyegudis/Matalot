@@ -43,6 +43,7 @@ export interface FamilyData {
   completeTask: (taskId: string) => Promise<'ok' | 'queued'>
   revokeCompletion: (completionId: string, parentProfileId: string) => Promise<void>
   addDayPick: (choreId: string, profileId: string, childId?: string | null, remindAt?: string | null) => Promise<void>
+  removeDayPick: (choreId: string, day: string) => Promise<void>
   notify: (kind: 'completion', body: { profileId: string; title: string }) => void
 }
 
@@ -170,6 +171,14 @@ export function useFamilyData(familyId: string | null): FamilyData {
     [refetch],
   )
 
+  const removeDayPick = useCallback(
+    async (choreId: string, day: string) => {
+      await supabase.from('day_picks').delete().eq('chore_id', choreId).eq('day', day)
+      await refetch()
+    },
+    [refetch],
+  )
+
   const revokeCompletion = useCallback(
     async (completionId: string, parentProfileId: string) => {
       await supabase
@@ -181,5 +190,5 @@ export function useFamilyData(familyId: string | null): FamilyData {
     [refetch],
   )
 
-  return { chores, completions, tasks, dayPicks, loading, refetch, completeChore, completeTask, revokeCompletion, addDayPick, notify }
+  return { chores, completions, tasks, dayPicks, loading, refetch, completeChore, completeTask, revokeCompletion, addDayPick, removeDayPick, notify }
 }
