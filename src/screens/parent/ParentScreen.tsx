@@ -7,10 +7,10 @@ import { NewTask } from './NewTask'
 import { Settings } from './Settings'
 
 const TABS = [
-  { key: 'board', label: '📊 לוח שבועי' },
-  { key: 'chores', label: '🧹 מטלות' },
-  { key: 'task', label: '📌 משימה' },
-  { key: 'settings', label: '⚙️ הגדרות' },
+  { key: 'board', emoji: '📊', label: 'לוח' },
+  { key: 'chores', emoji: '🧹', label: 'מטלות' },
+  { key: 'task', emoji: '📣', label: 'התראות' },
+  { key: 'settings', emoji: '⚙️', label: 'הגדרות' },
 ] as const
 
 export function ParentScreen({ data }: { data: FamilyData }) {
@@ -26,22 +26,26 @@ export function ParentScreen({ data }: { data: FamilyData }) {
         </button>
       </header>
 
-      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             style={{
-              padding: '9px 14px',
-              borderRadius: 999,
-              whiteSpace: 'nowrap',
+              padding: '8px 2px',
+              borderRadius: 12,
               fontWeight: 700,
-              fontSize: '0.88rem',
+              fontSize: '0.78rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 2,
               background: tab === t.key ? 'var(--grape)' : 'rgba(255,255,255,.06)',
               color: tab === t.key ? '#fff' : 'var(--ink)',
               border: 'var(--border)',
             }}
           >
+            <span style={{ fontSize: '1.1rem' }}>{t.emoji}</span>
             {t.label}
           </button>
         ))}
