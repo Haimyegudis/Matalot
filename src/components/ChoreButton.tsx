@@ -90,21 +90,7 @@ export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, assignedO
             <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', fontWeight: 600 }}>{othersLabel}</span>
           )}
         </span>
-      ) : chore.track_only ? (
-        <span
-          style={{
-            fontSize: '0.76rem',
-            background: 'rgba(34,211,238,.12)',
-            color: 'var(--sky)',
-            border: '1px solid rgba(34,211,238,.35)',
-            borderRadius: 999,
-            padding: '2px 10px',
-            fontWeight: 700,
-          }}
-        >
-          למעקב{perDay > 1 ? ` ×${perDay}` : ''}
-        </span>
-      ) : (
+      ) : chore.track_only ? null : (
         <span
           style={{
             fontSize: '0.76rem',

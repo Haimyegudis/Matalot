@@ -38,6 +38,8 @@ export interface Chore {
   is_shower: boolean
   track_only: boolean
   per_day: number
+  /** weekday schedule 0=Sun..6=Sat; null = every day; [] = general list (no schedule) */
+  days: number[] | null
   active: boolean
   sort: number
 }

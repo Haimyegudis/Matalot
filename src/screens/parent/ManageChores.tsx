@@ -13,8 +13,12 @@ interface Draft {
   points: number
   per_day: number
   track_only: boolean
+  /** null = daily, [] = general list, [0..6] = specific weekdays */
+  days: number[] | null
   assigned_to: string | null
 }
+
+const DAY_NAMES = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש']
 
 export function ManageChores({ data }: { data: FamilyData }) {
   const { family, profiles } = useSession()
@@ -31,7 +35,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
     if (draft.id) {
       await supabase
         .from('chores')
-        .update({ title: draft.title, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, assigned_to: draft.assigned_to })
+        .update({ title: draft.title, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, days: draft.days, assigned_to: draft.assigned_to })
         .eq('id', draft.id)
     } else {
       await supabase.from('chores').insert({
@@ -41,6 +45,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         points: draft.points,
         per_day: draft.per_day,
         track_only: draft.track_only,
+        days: draft.days,
         assigned_to: draft.assigned_to,
         sort: active.length,
       })
@@ -62,7 +67,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         <button
           key={c.id}
           className="card"
-          onClick={() => setDraft({ id: c.id, title: c.title, icon: c.icon, points: c.points, per_day: c.per_day ?? 1, track_only: c.track_only ?? false, assigned_to: c.assigned_to })}
+          onClick={() => setDraft({ id: c.id, title: c.title, icon: c.icon, points: c.points, per_day: c.per_day ?? 1, track_only: c.track_only ?? false, days: c.days, assigned_to: c.assigned_to })}
           style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', textAlign: 'start' }}
         >
           <ChoreIcon name={c.icon} size={40} />
@@ -70,8 +75,9 @@ export function ManageChores({ data }: { data: FamilyData }) {
             <div style={{ fontWeight: 700 }}>{c.title}</div>
             <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)' }}>
               {c.assigned_to ? `של ${kids.find((k) => k.id === c.assigned_to)?.name ?? '?'}` : 'משותפת — מי שעושה מקבל'}
-              {c.track_only ? ' · למעקב בלבד' : ` · +${c.points}`}
+              {c.track_only ? ' · בלי נקודות' : ` · +${c.points}`}
               {(c.per_day ?? 1) > 1 ? ` · ×${c.per_day} ביום` : ''}
+              {c.days === null ? ' · יומית' : c.days.length === 0 ? ' · רשימה כללית' : ` · ${c.days.map((d) => DAY_NAMES[d]).join(',')}`}
             </div>
           </div>
           <span style={{ color: 'var(--ink-soft)' }}>✏️</span>
@@ -88,7 +94,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         </div>
       )}
 
-      <button className="btn" onClick={() => setDraft({ title: '', icon: 'star', points: 1, per_day: 1, track_only: false, assigned_to: null })}>
+      <button className="btn" onClick={() => setDraft({ title: '', icon: 'star', points: 1, per_day: 1, track_only: false, days: [], assigned_to: null })}>
         ➕ מטלה חדשה
       </button>
 
@@ -113,6 +119,64 @@ export function ManageChores({ data }: { data: FamilyData }) {
               <button className="btn btn--ghost" style={{ padding: '6px 14px' }} onClick={() => setDraft({ ...draft, per_day: Math.max(1, draft.per_day - 1) })}>−</button>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem' }}>{draft.per_day}</span>
               <button className="btn btn--ghost" style={{ padding: '6px 14px' }} onClick={() => setDraft({ ...draft, per_day: Math.min(10, draft.per_day + 1) })}>+</button>
+            </div>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <span style={{ fontWeight: 700 }}>מתי מופיעה:</span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {([
+                  ['daily', 'כל יום'],
+                  ['general', 'רשימה כללית'],
+                  ['days', 'ימים מסוימים'],
+                ] as const).map(([mode, label]) => {
+                  const current = draft.days === null ? 'daily' : draft.days.length === 0 ? 'general' : 'days'
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() =>
+                        setDraft({ ...draft, days: mode === 'daily' ? null : mode === 'general' ? [] : [0] })
+                      }
+                      style={{
+                        flex: 1,
+                        padding: '8px 6px',
+                        borderRadius: 10,
+                        fontWeight: 700,
+                        fontSize: '0.82rem',
+                        border: current === mode ? '2.5px solid var(--grape)' : 'var(--border)',
+                        background: current === mode ? 'rgba(139,92,246,.12)' : 'rgba(255,255,255,.05)',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+              {draft.days !== null && draft.days.length > 0 && (
+                <div style={{ display: 'flex', gap: 5 }}>
+                  {DAY_NAMES.map((d, i) => {
+                    const on = draft.days!.includes(i)
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          const next = on ? draft.days!.filter((x) => x !== i) : [...draft.days!, i]
+                          setDraft({ ...draft, days: next.length === 0 ? [0] : next })
+                        }}
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 10,
+                          fontWeight: 800,
+                          border: on ? '2.5px solid var(--teal)' : 'var(--border)',
+                          background: on ? 'rgba(45,212,191,.15)' : 'rgba(255,255,255,.05)',
+                          color: on ? 'var(--teal)' : 'var(--ink-soft)',
+                        }}
+                      >
+                        {d}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700 }}>
               <input
