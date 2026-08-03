@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { FamilyData } from '../lib/store'
@@ -115,6 +116,16 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           <div style={{ color: 'var(--ink-soft)', fontSize: '0.85rem', fontWeight: 600 }}>{dateLabel}</div>
         </div>
       </header>
+
+      {me.role === 'parent' && !yesterday && (
+        <Link
+          to="/parent"
+          className="btn"
+          style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center' }}
+        >
+          🔓 כלי הורה — לוח · מטלות · התראות · הגדרות
+        </Link>
+      )}
 
       <ScoreBar kids={kids} scores={scores} currentId={me.id} />
 

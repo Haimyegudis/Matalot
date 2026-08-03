@@ -33,6 +33,7 @@ export function ProfilePicker() {
     if ((await hashPin(value)) === family!.parent_pin_hash) {
       const p = pinFor!
       setPinFor(null)
+      sessionStorage.setItem('matalot.parentUnlocked', '1')
       activate(p.id)
     } else if (value.length >= 6) {
       setWrong(true)
