@@ -59,6 +59,10 @@ self.addEventListener('push', (event) => {
       lang: 'he',
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
+      // sound itself is controlled by the OS notification channel; make sure
+      // we never ask for a quiet notification and request haptics where honored
+      silent: false,
+      vibrate: [200, 100, 200],
       data: { url: data.url },
     }),
   )
