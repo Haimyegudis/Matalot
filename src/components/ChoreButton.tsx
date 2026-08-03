@@ -61,9 +61,9 @@ export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, assignedO
         <ChoreIcon name={chore.icon} size={58} />
       </span>
       <span style={{ fontWeight: 700, fontSize: '0.95rem', lineHeight: 1.2 }}>{chore.title}</span>
-      {assignedOther && !closed && (
+      {assignedOther && (
         <span style={{ fontSize: '0.7rem', color: 'var(--sky)', fontWeight: 600 }}>
-          מיועדת ל{assignedOther} — אפשר לקחת
+          של {assignedOther}
         </span>
       )}
 

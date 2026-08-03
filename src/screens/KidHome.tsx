@@ -28,10 +28,15 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
 
   const scores = weeklyScores(data.completions, data.tasks, data.chores, kids, weekBounds(new Date()))
 
-  // assignment is a designation, not a lock — kids see and may take any chore.
+  // assigned chores are exclusive to their kid; shared chores open to all.
   // days: null = daily, [d,...] = those weekdays only, [] = general list below.
   const dow = target.getDay()
-  const visible = data.chores.filter((c) => c.active && !c.is_shower)
+  const visible = data.chores.filter(
+    (c) =>
+      c.active &&
+      !c.is_shower &&
+      (me.role === 'parent' || c.assigned_to === null || c.assigned_to === me.id),
+  )
   const activeChores = visible.filter((c) => !c.days || (c.days.length > 0 && c.days.includes(dow)))
   const generalChores = visible.filter((c) => c.days !== null && c.days.length === 0)
   const showerChore = data.chores.find((c) => c.is_shower && c.active)
@@ -151,8 +156,6 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           const rows = dayCompletions.filter((c) => c.chore_id === chore.id)
           const mine = rows.some((c) => c.profile_id === me.id)
           const names = [...new Set(rows.map((c) => nameOf(c.profile_id)))]
-          const assignedOther =
-            chore.assigned_to && chore.assigned_to !== me.id ? nameOf(chore.assigned_to) : null
           return (
             <ChoreButton
               key={chore.id}
@@ -160,7 +163,9 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
               doneCount={rows.length}
               doneByNames={names}
               doneByMe={mine}
-              assignedOther={assignedOther}
+              assignedOther={
+                me.role === 'parent' && chore.assigned_to ? nameOf(chore.assigned_to) : null
+              }
               readonly={viewOnly}
               onDone={() => doChore(chore.id)}
             />
