@@ -1,0 +1,109 @@
+@import './tokens.css';
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 197, 61, 0.16), transparent 32%),
+    radial-gradient(circle at 88% 16%, rgba(46, 196, 182, 0.13), transparent 30%),
+    radial-gradient(circle at 50% 95%, rgba(155, 93, 229, 0.10), transparent 40%),
+    var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+  user-select: none;
+}
+
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; }
+
+button {
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  width: 100%;
+  outline: none;
+}
+input:focus, select:focus { border-color: var(--grape); }
+
+/* app shell */
+#root { max-width: 520px; margin: 0 auto; min-height: 100dvh; }
+
+.screen {
+  padding: 18px 16px calc(var(--nav-h) + 24px);
+  min-height: 100dvh;
+}
+
+/* chunky card */
+.card {
+  background: var(--paper);
+  border: var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--pop);
+}
+
+/* primary chunky button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  background: var(--grape);
+  color: #fff;
+  border-radius: var(--r-md);
+  padding: 14px 26px;
+  box-shadow: 0 5px 0 rgba(43, 33, 69, 0.35);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(43, 33, 69, 0.35); }
+.btn:disabled { opacity: 0.45; }
+.btn--teal { background: var(--teal); }
+.btn--coral { background: var(--coral); }
+.btn--ghost {
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--border);
+  box-shadow: var(--pop);
+}
+
+/* burst animation on chore completion */
+@keyframes pop-in {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes burst-fly {
+  from { transform: translate(0, 0) scale(1); opacity: 1; }
+  to { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+}
+@keyframes chip-rise {
+  0% { transform: translateY(6px) scale(0.6); opacity: 0; }
+  25% { transform: translateY(-4px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(-30px) scale(1); opacity: 0; }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-4deg); }
+  75% { transform: rotate(4deg); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}

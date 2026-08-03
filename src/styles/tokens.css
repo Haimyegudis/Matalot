@@ -1,0 +1,35 @@
+/* ── Matalot design tokens: candy board-game look ─────────────── */
+:root {
+  /* surfaces */
+  --bg: #fff7ea;            /* warm cream */
+  --paper: #ffffff;
+  --ink: #2b2145;           /* deep plum text */
+  --ink-soft: #6f6590;
+  --line: rgba(43, 33, 69, 0.14);
+
+  /* candy palette */
+  --coral: #ff6b6b;
+  --teal: #2ec4b6;
+  --sunny: #ffc53d;
+  --grape: #9b5de5;
+  --sky: #4cc9f0;
+  --mint: #9bf6b0;
+
+  --accent: var(--grape);
+  --good: #23a94d;
+  --bad: #e5484d;
+
+  /* board-game hard shadows */
+  --pop: 0 4px 0 rgba(43, 33, 69, 0.16);
+  --pop-lg: 0 7px 0 rgba(43, 33, 69, 0.16);
+  --border: 2.5px solid rgba(43, 33, 69, 0.16);
+
+  --r-sm: 14px;
+  --r-md: 20px;
+  --r-lg: 28px;
+
+  --font-display: 'Secular One', 'Rubik', sans-serif;
+  --font-body: 'Rubik', 'Varela Round', sans-serif;
+
+  --nav-h: 72px;
+}
