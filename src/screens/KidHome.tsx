@@ -17,6 +17,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const [generalOpen, setGeneralOpen] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newIcon, setNewIcon] = useState('star')
+  const [newAssignee, setNewAssignee] = useState<string | null>(null)
   const me = currentProfile!
   const kids = profiles.filter((p) => p.role === 'child')
   // parents watch — only kids mark completions
@@ -70,7 +71,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
       points: 1,
       per_day: 1,
       days: [],
-      assigned_to: null,
+      assigned_to: newAssignee,
       sort: data.chores.length,
     })
     if (!error) {
@@ -78,6 +79,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
       setAdding(false)
       setNewTitle('')
       setNewIcon('star')
+      setNewAssignee(null)
       showToast('המטלה נוספה! ✓')
     }
   }
@@ -258,8 +260,34 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           <h2 style={{ fontSize: '1.15rem' }}>מטלה חדשה</h2>
           <input value={newTitle} placeholder="שם המטלה (לא חובה — יילקח מהאייקון)" onChange={(e) => setNewTitle(e.target.value)} />
           <IconPicker value={newIcon} onChange={setNewIcon} />
+          {me.role === 'parent' && (
+            <div style={{ display: 'grid', gap: 6 }}>
+              <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>למי המטלה?</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[{ id: null as string | null, name: 'משותפת' }, ...kids].map((k) => (
+                  <button
+                    key={k.id ?? 'all'}
+                    onClick={() => setNewAssignee(k.id)}
+                    style={{
+                      flex: 1,
+                      padding: '9px 8px',
+                      borderRadius: 10,
+                      fontWeight: 700,
+                      fontSize: '0.88rem',
+                      border: newAssignee === k.id ? '2.5px solid var(--grape)' : 'var(--border)',
+                      background: newAssignee === k.id ? 'rgba(139,92,246,.14)' : 'rgba(255,255,255,.05)',
+                    }}
+                  >
+                    {k.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>
-            המטלה תהיה משותפת ושווה נקודה אחת. הורה יכול לערוך אותה במצב הורה.
+            {me.role === 'parent'
+              ? 'תיכנס לרשימה הכללית; עריכה מלאה (נקודות, ימים) במצב הורה.'
+              : 'המטלה תהיה משותפת ושווה נקודה אחת. הורה יכול לערוך אותה במצב הורה.'}
           </div>
           <button className="btn" onClick={addChore}>
             הוספה
