@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { FamilyData } from '../lib/store'
-import { weekBounds, weeklyScores, dayKey } from '../lib/logic'
+import { weekBounds, weeklyScores, dayKey, pickedChoreIds } from '../lib/logic'
 import { ChoreButton } from '../components/ChoreButton'
 import { ScoreBar } from '../components/ScoreBar'
 import { ShowerCard } from '../components/ShowerCard'
@@ -37,7 +37,9 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const dow = target.getDay()
   const mine = (c: (typeof data.chores)[number]) =>
     c.active && !c.is_shower && (me.role === 'parent' || c.assigned_to === null || c.assigned_to === me.id)
-  const pickedToday = new Set(data.dayPicks.filter((p) => p.day === day).map((p) => p.chore_id))
+  const viewerId = me.role === 'parent' ? null : me.id
+  const pickedToday = pickedChoreIds(data.dayPicks, day, viewerId)
+  const todayPicks = data.dayPicks.filter((p) => p.day === day)
   const activeChores = data.chores.filter(
     (c) =>
       mine(c) &&
@@ -47,8 +49,16 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           ? c.days.includes(dow)
           : pickedToday.has(c.id)),
   )
+  // a catalog chore stays listed until it's covered for everyone it can apply to
+  const coveredForAll = (choreId: string) =>
+    todayPicks.some((p) => p.chore_id === choreId && p.child_id === null) ||
+    kids.every((k) => todayPicks.some((p) => p.chore_id === choreId && p.child_id === k.id))
   const catalogChores = data.chores.filter(
-    (c) => mine(c) && c.days !== null && c.days.length === 0 && !pickedToday.has(c.id),
+    (c) =>
+      mine(c) &&
+      c.days !== null &&
+      c.days.length === 0 &&
+      (me.role === 'parent' && !c.assigned_to ? !coveredForAll(c.id) : !pickedToday.has(c.id)),
   )
   const showerChore = data.chores.find((c) => c.is_shower && c.active)
 
@@ -101,8 +111,8 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
     }
   }
 
-  async function pickFromCatalog(choreId: string) {
-    await data.addDayPick(choreId, me.id)
+  async function pickFromCatalog(choreId: string, childId: string | null = null) {
+    await data.addDayPick(choreId, me.id, childId)
     showToast('נוספה להיום ✓')
   }
 
@@ -190,6 +200,16 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           const rows = dayCompletions.filter((c) => c.chore_id === chore.id)
           const mine = rows.some((c) => c.profile_id === me.id)
           const names = [...new Set(rows.map((c) => nameOf(c.profile_id)))]
+          const remindPick = todayPicks.find(
+            (p) =>
+              p.chore_id === chore.id &&
+              p.remind_at &&
+              (p.child_id === null || me.role === 'parent' || p.child_id === me.id),
+          )
+          const pickedFor =
+            me.role === 'parent' && !chore.assigned_to
+              ? todayPicks.find((p) => p.chore_id === chore.id && p.child_id)?.child_id ?? null
+              : null
           return (
             <ChoreButton
               key={chore.id}
@@ -198,7 +218,16 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
               doneByNames={names}
               doneByMe={mine}
               assignedOther={
-                me.role === 'parent' && chore.assigned_to ? nameOf(chore.assigned_to) : null
+                me.role === 'parent' && chore.assigned_to
+                  ? nameOf(chore.assigned_to)
+                  : pickedFor
+                    ? `${nameOf(pickedFor)} היום`
+                    : null
+              }
+              remindLabel={
+                remindPick
+                  ? `⏰ עד ${new Date(remindPick.remind_at!).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`
+                  : null
               }
               readonly={viewOnly}
               onDone={() => doChore(chore.id)}
@@ -246,13 +275,34 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
                       {(c.per_day ?? 1) > 1 ? ` · ×${c.per_day}` : ''}
                     </div>
                   </div>
-                  <button
-                    className="btn btn--teal"
-                    style={{ padding: '8px 16px', fontSize: '0.88rem' }}
-                    onClick={() => pickFromCatalog(c.id)}
-                  >
-                    ➕ להיום
-                  </button>
+                  {me.role === 'parent' && !c.assigned_to ? (
+                    <div style={{ display: 'grid', gap: 4 }}>
+                      {[{ id: null as string | null, name: 'שניהם' }, ...kids].map((k) => {
+                        const covered =
+                          todayPicks.some((p) => p.chore_id === c.id && p.child_id === null) ||
+                          (k.id !== null && todayPicks.some((p) => p.chore_id === c.id && p.child_id === k.id))
+                        return (
+                          <button
+                            key={k.id ?? 'all'}
+                            className="btn btn--teal"
+                            disabled={covered}
+                            style={{ padding: '6px 12px', fontSize: '0.8rem', opacity: covered ? 0.45 : 1 }}
+                            onClick={() => pickFromCatalog(c.id, k.id)}
+                          >
+                            ➕ {k.name}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <button
+                      className="btn btn--teal"
+                      style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+                      onClick={() => pickFromCatalog(c.id)}
+                    >
+                      ➕ להיום
+                    </button>
+                  )}
                 </div>
               ))}
               <button className="btn btn--ghost" onClick={() => setCreating(true)}>

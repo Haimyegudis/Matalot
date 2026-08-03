@@ -13,11 +13,13 @@ interface Props {
   doneByMe: boolean
   /** name of the sibling this chore is designated to (null = mine/shared) */
   assignedOther?: string | null
+  /** "⏰ עד HH:MM" line for a today-pick with a reminder */
+  remindLabel?: string | null
   readonly?: boolean
   onDone: () => Promise<void>
 }
 
-export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, assignedOther, readonly, onDone }: Props) {
+export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, assignedOther, remindLabel, readonly, onDone }: Props) {
   const [bursting, setBursting] = useState(false)
   const [busy, setBusy] = useState(false)
   const perDay = chore.per_day ?? 1
@@ -79,6 +81,11 @@ export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, assignedO
       {assignedOther && (
         <span style={{ fontSize: '0.7rem', color: 'var(--sky)', fontWeight: 600 }}>
           של {assignedOther}
+        </span>
+      )}
+      {remindLabel && !closed && (
+        <span style={{ fontSize: '0.74rem', color: 'var(--coral)', fontWeight: 700 }}>
+          {remindLabel}
         </span>
       )}
 

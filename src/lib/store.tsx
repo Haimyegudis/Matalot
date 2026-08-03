@@ -42,7 +42,7 @@ export interface FamilyData {
   completeChore: (choreId: string, profileId: string) => Promise<'ok' | 'already_done' | 'queued'>
   completeTask: (taskId: string) => Promise<'ok' | 'queued'>
   revokeCompletion: (completionId: string, parentProfileId: string) => Promise<void>
-  addDayPick: (choreId: string, profileId: string) => Promise<void>
+  addDayPick: (choreId: string, profileId: string, childId?: string | null, remindAt?: string | null) => Promise<void>
   notify: (kind: 'completion', body: { profileId: string; title: string }) => void
 }
 
@@ -155,14 +155,16 @@ export function useFamilyData(familyId: string | null): FamilyData {
   )
 
   const addDayPick = useCallback(
-    async (choreId: string, profileId: string) => {
+    async (choreId: string, profileId: string, childId: string | null = null, remindAt: string | null = null) => {
       await supabase.from('day_picks').insert({
         family_id: familyRef.current!,
         chore_id: choreId,
         day: dayKey(new Date()),
         added_by: profileId,
+        child_id: childId,
+        remind_at: remindAt,
       })
-      // duplicate insert (unique chore+day) is fine — someone else already added it
+      // duplicate insert (unique chore+day+child) is fine — someone else already added it
       await refetch()
     },
     [refetch],
