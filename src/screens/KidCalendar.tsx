@@ -4,6 +4,7 @@ import type { FamilyData } from '../lib/store'
 import { dayKey, chorePointsMap } from '../lib/logic'
 import { Sheet } from '../components/Sheet'
 import { ChoreIcon } from '../components/icons'
+import { ProfileFace } from '../components/AvatarSvg'
 
 const WEEKDAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש']
 const MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר']
@@ -17,6 +18,8 @@ export function KidCalendar({ data }: { data: FamilyData }) {
   const [month, setMonth] = useState(now.getMonth())
   const [selected, setSelected] = useState<string | null>(null)
   const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [kidFilter, setKidFilter] = useState<string | null>(null)
+  const kids = profiles.filter((p) => p.role === 'child')
 
   const first = new Date(year, month, 1)
   const daysInMonth = new Date(year, month + 1, 0).getDate()
@@ -26,12 +29,13 @@ export function KidCalendar({ data }: { data: FamilyData }) {
   const choreById = new Map(data.chores.map((c) => [c.id, c]))
   const nameOf = (id: string) => profiles.find((p) => p.id === id)?.name ?? '?'
 
-  // parent sees everyone; kid sees only their own
+  // parent sees everyone (with optional per-kid filter); kid sees only their own
+  const scopeId = isParent ? kidFilter : me.id
   const scopedCompletions = data.completions.filter(
-    (c) => !c.revoked_by && (isParent || c.profile_id === me.id),
+    (c) => !c.revoked_by && (scopeId ? c.profile_id === scopeId : isParent),
   )
   const scopedTasks = data.tasks.filter(
-    (t) => t.status === 'done' && t.completed_at && (isParent || t.child_id === me.id),
+    (t) => t.status === 'done' && t.completed_at && (scopeId ? t.child_id === scopeId : isParent),
   )
 
   const pointsPerDay = new Map<string, number>()
@@ -77,8 +81,38 @@ export function KidCalendar({ data }: { data: FamilyData }) {
       </header>
 
       {isParent && (
-        <div style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--ink-soft)', fontWeight: 600 }}>
-          תצוגת הורה — כל הילדים · לחיצה על יום פותחת רשימה לניהול
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+          <button
+            onClick={() => setKidFilter(null)}
+            style={{
+              padding: '8px 16px',
+              borderRadius: 999,
+              fontWeight: 700,
+              border: kidFilter === null ? '2.5px solid var(--grape)' : 'var(--border)',
+              background: kidFilter === null ? 'rgba(139,92,246,.15)' : 'rgba(255,255,255,.05)',
+            }}
+          >
+            הכל
+          </button>
+          {kids.map((k) => (
+            <button
+              key={k.id}
+              onClick={() => setKidFilter(k.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '5px 14px 5px 8px',
+                borderRadius: 999,
+                fontWeight: 700,
+                border: kidFilter === k.id ? `2.5px solid ${k.color}` : 'var(--border)',
+                background: kidFilter === k.id ? `${k.color}22` : 'rgba(255,255,255,.05)',
+              }}
+            >
+              <ProfileFace profile={k} size={28} />
+              {k.name}
+            </button>
+          ))}
         </div>
       )}
 
