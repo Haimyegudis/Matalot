@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from './supabase'
 import { createQueue, type QueuedOp, type SendResult } from './offlineQueue'
 import { dayKey } from './logic'
-import type { Chore, Completion, TaskRow } from './db-types'
+import type { Chore, Completion, DayPick, TaskRow } from './db-types'
 
 const queue = typeof localStorage !== 'undefined' ? createQueue(localStorage) : null
 
@@ -36,11 +36,13 @@ export interface FamilyData {
   chores: Chore[]
   completions: Completion[]
   tasks: TaskRow[]
+  dayPicks: DayPick[]
   loading: boolean
   refetch: () => Promise<void>
   completeChore: (choreId: string, profileId: string) => Promise<'ok' | 'already_done' | 'queued'>
   completeTask: (taskId: string) => Promise<'ok' | 'queued'>
   revokeCompletion: (completionId: string, parentProfileId: string) => Promise<void>
+  addDayPick: (choreId: string, profileId: string) => Promise<void>
   notify: (kind: 'completion', body: { profileId: string; title: string }) => void
 }
 
@@ -48,6 +50,7 @@ export function useFamilyData(familyId: string | null): FamilyData {
   const [chores, setChores] = useState<Chore[]>([])
   const [completions, setCompletions] = useState<Completion[]>([])
   const [tasks, setTasks] = useState<TaskRow[]>([])
+  const [dayPicks, setDayPicks] = useState<DayPick[]>([])
   const [loading, setLoading] = useState(true)
   const familyRef = useRef(familyId)
   familyRef.current = familyId
@@ -56,14 +59,16 @@ export function useFamilyData(familyId: string | null): FamilyData {
     if (!familyRef.current) return
     const since = new Date()
     since.setDate(since.getDate() - HISTORY_DAYS)
-    const [c1, c2, c3] = await Promise.all([
+    const [c1, c2, c3, c4] = await Promise.all([
       supabase.from('chores').select('*').order('sort'),
       supabase.from('completions').select('*').gte('day', dayKey(since)),
       supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+      supabase.from('day_picks').select('*').gte('day', dayKey(since)),
     ])
     if (c1.data) setChores(c1.data)
     if (c2.data) setCompletions(c2.data)
     if (c3.data) setTasks(c3.data)
+    if (c4.data) setDayPicks(c4.data)
     setLoading(false)
   }, [])
 
@@ -75,6 +80,7 @@ export function useFamilyData(familyId: string | null): FamilyData {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'completions' }, refetch)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chores' }, refetch)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, refetch)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'day_picks' }, refetch)
       .subscribe()
 
     const flush = () => queue?.flush(sendOp).then(refetch)
@@ -148,6 +154,20 @@ export function useFamilyData(familyId: string | null): FamilyData {
     [refetch],
   )
 
+  const addDayPick = useCallback(
+    async (choreId: string, profileId: string) => {
+      await supabase.from('day_picks').insert({
+        family_id: familyRef.current!,
+        chore_id: choreId,
+        day: dayKey(new Date()),
+        added_by: profileId,
+      })
+      // duplicate insert (unique chore+day) is fine — someone else already added it
+      await refetch()
+    },
+    [refetch],
+  )
+
   const revokeCompletion = useCallback(
     async (completionId: string, parentProfileId: string) => {
       await supabase
@@ -159,5 +179,5 @@ export function useFamilyData(familyId: string | null): FamilyData {
     [refetch],
   )
 
-  return { chores, completions, tasks, loading, refetch, completeChore, completeTask, revokeCompletion, notify }
+  return { chores, completions, tasks, dayPicks, loading, refetch, completeChore, completeTask, revokeCompletion, addDayPick, notify }
 }

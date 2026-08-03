@@ -69,6 +69,14 @@ export interface TaskRow {
   created_at: string
 }
 
+export interface DayPick {
+  id: string
+  family_id: string
+  chore_id: string
+  day: string
+  added_by: string | null
+}
+
 export interface PushSubscriptionRow {
   id: string
   family_id: string

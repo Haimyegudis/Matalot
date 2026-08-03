@@ -14,6 +14,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const { profiles, currentProfile } = useSession()
   const [toast, setToast] = useState('')
   const [adding, setAdding] = useState(false)
+  const [creating, setCreating] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newIcon, setNewIcon] = useState('star')
   const [newNote, setNewNote] = useState('')
@@ -30,14 +31,23 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const scores = weeklyScores(data.completions, data.tasks, data.chores, kids, weekBounds(new Date()))
 
   // assigned chores are exclusive to their kid; shared chores open to all.
-  // days: null/[] = every day, [d,...] = those weekdays only. Everything is a tile.
+  // days: null = fixed daily tile, [d,...] = those weekdays, [] = catalog —
+  // appears only when someone pulled it into this day via the + list.
   const dow = target.getDay()
+  const mine = (c: (typeof data.chores)[number]) =>
+    c.active && !c.is_shower && (me.role === 'parent' || c.assigned_to === null || c.assigned_to === me.id)
+  const pickedToday = new Set(data.dayPicks.filter((p) => p.day === day).map((p) => p.chore_id))
   const activeChores = data.chores.filter(
     (c) =>
-      c.active &&
-      !c.is_shower &&
-      (me.role === 'parent' || c.assigned_to === null || c.assigned_to === me.id) &&
-      (!c.days || c.days.length === 0 || c.days.includes(dow)),
+      mine(c) &&
+      (c.days === null
+        ? true
+        : c.days.length > 0
+          ? c.days.includes(dow)
+          : pickedToday.has(c.id)),
+  )
+  const catalogChores = data.chores.filter(
+    (c) => mine(c) && c.days !== null && c.days.length === 0 && !pickedToday.has(c.id),
   )
   const showerChore = data.chores.find((c) => c.is_shower && c.active)
 
@@ -63,26 +73,36 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const dateLabel = target.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })
 
   async function addChore() {
-    const { error } = await supabase.from('chores').insert({
-      family_id: me.family_id,
-      title: newTitle.trim() || ICON_LABELS[newIcon] || 'מטלה',
-      note: newNote.trim() || null,
-      icon: newIcon,
-      points: 1,
-      per_day: 1,
-      days: null,
-      assigned_to: newAssignee,
-      sort: data.chores.length,
-    })
-    if (!error) {
-      await data.refetch()
+    const { data: created, error } = await supabase
+      .from('chores')
+      .insert({
+        family_id: me.family_id,
+        title: newTitle.trim() || ICON_LABELS[newIcon] || 'מטלה',
+        note: newNote.trim() || null,
+        icon: newIcon,
+        points: 1,
+        per_day: 1,
+        days: [],
+        assigned_to: newAssignee,
+        sort: data.chores.length,
+      })
+      .select()
+      .single()
+    if (!error && created) {
+      await data.addDayPick(created.id, me.id)
       setAdding(false)
       setNewTitle('')
       setNewIcon('star')
       setNewNote('')
       setNewAssignee(null)
+      setCreating(false)
       showToast('המטלה נוספה! ✓')
     }
+  }
+
+  async function pickFromCatalog(choreId: string) {
+    await data.addDayPick(choreId, me.id)
+    showToast('נוספה להיום ✓')
   }
 
   return (
@@ -196,9 +216,42 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
         )}
       </section>
 
-      <Sheet open={adding} onClose={() => setAdding(false)}>
+      <Sheet open={adding} onClose={() => { setAdding(false); setCreating(false) }}>
         <div style={{ display: 'grid', gap: 12, paddingBottom: 8 }}>
-          <h2 style={{ fontSize: '1.15rem' }}>מטלה חדשה</h2>
+          <h2 style={{ fontSize: '1.15rem' }}>רשימת מטלות</h2>
+
+          {!creating && (
+            <>
+              {catalogChores.length === 0 && (
+                <div style={{ color: 'var(--ink-soft)', fontSize: '0.9rem' }}>הכל כבר על הלוח של היום 🎉</div>
+              )}
+              {catalogChores.map((c) => (
+                <div key={c.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px' }}>
+                  <ChoreIcon name={c.icon} size={38} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{c.title}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--ink-soft)', fontWeight: 600 }}>
+                      {c.track_only ? 'בלי נקודות' : `+${c.points}`}
+                      {(c.per_day ?? 1) > 1 ? ` · ×${c.per_day}` : ''}
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn--teal"
+                    style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+                    onClick={() => pickFromCatalog(c.id)}
+                  >
+                    ➕ להיום
+                  </button>
+                </div>
+              ))}
+              <button className="btn btn--ghost" onClick={() => setCreating(true)}>
+                ✏️ מטלה חדשה לגמרי
+              </button>
+            </>
+          )}
+
+          {creating && (
+            <>
           <input value={newTitle} placeholder="שם המטלה (לא חובה — יילקח מהאייקון)" onChange={(e) => setNewTitle(e.target.value)} />
           <textarea
             value={newNote}
@@ -240,6 +293,8 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           <button className="btn" onClick={addChore}>
             הוספה
           </button>
+            </>
+          )}
         </div>
       </Sheet>
 
