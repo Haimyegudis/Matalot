@@ -6,7 +6,8 @@ import {
   SKINS, HAIR_STYLES, HAIR_COLORS, EYE_STYLES, MOUTH_STYLES, GLASSES, EARRINGS, normalizeAvatar,
 } from '../lib/avatarOptions'
 import type { AvatarConfig } from '../lib/db-types'
-import { enablePush } from '../lib/push'
+import { enablePush, getPushStatus } from '../lib/push'
+import { useEffect } from 'react'
 
 const TABS = [
   { key: 'skin', label: 'עור' },
@@ -44,7 +45,12 @@ export function ProfileScreen() {
   const [tab, setTab] = useState<(typeof TABS)[number]['key']>('skin')
   const [saved, setSaved] = useState(false)
   const [pushMsg, setPushMsg] = useState('')
+  const [pushActive, setPushActive] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    getPushStatus(me.id).then((s) => setPushActive(s === 'active'))
+  }, [me.id])
 
   async function save(next: AvatarConfig) {
     setConfig(next)
@@ -200,16 +206,26 @@ export function ProfileScreen() {
         )}
       </div>
 
-      <button
-        className="btn btn--teal"
-        onClick={async () => {
-          const ok = await enablePush(me.id)
-          setPushMsg(ok ? 'התראות פועלות 🔔' : 'לא ניתן להפעיל התראות במכשיר זה')
-          setTimeout(() => setPushMsg(''), 2500)
-        }}
-      >
-        🔔 הפעלת התראות במכשיר הזה
-      </button>
+      {pushActive ? (
+        <div
+          className="card"
+          style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: 'var(--good)' }}
+        >
+          🔔 התראות פעילות במכשיר הזה ✓
+        </div>
+      ) : (
+        <button
+          className="btn btn--teal"
+          onClick={async () => {
+            const ok = await enablePush(me.id).catch(() => false)
+            setPushActive(ok)
+            setPushMsg(ok ? 'התראות פועלות 🔔' : 'ההרשאה נחסמה — אפשר התראות לאפליקציה בהגדרות אנדרואיד')
+            setTimeout(() => setPushMsg(''), 4000)
+          }}
+        >
+          🔔 הפעלת התראות במכשיר הזה
+        </button>
+      )}
       {pushMsg && <div style={{ textAlign: 'center', fontWeight: 700 }}>{pushMsg}</div>}
       <div style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--ink-soft)' }}>
         אוואטרים: Adventurer by Lisa Wischofsky (CC BY 4.0)
