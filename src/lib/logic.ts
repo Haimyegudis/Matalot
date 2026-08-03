@@ -14,9 +14,9 @@ export function weekBounds(d: Date): { start: Date; end: Date } {
   return { start, end }
 }
 
-/** Points per chore — shower is tracking-only, worth 0. */
+/** Points per chore — shower and tracking-only chores are worth 0. */
 export function chorePointsMap(chores: Chore[]): Map<string, number> {
-  return new Map(chores.map((c) => [c.id, c.is_shower ? 0 : c.points]))
+  return new Map(chores.map((c) => [c.id, c.is_shower || c.track_only ? 0 : c.points]))
 }
 
 export function weeklyScores(

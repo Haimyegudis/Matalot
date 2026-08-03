@@ -6,7 +6,7 @@ const kidA: Profile = { id: 'a', family_id: 'f', name: 'דני', role: 'child', 
 const kidB: Profile = { id: 'b', family_id: 'f', name: 'יעל', role: 'child', gender: 'female', avatar: null, photo_url: null, color: '#00f', sort: 1 }
 
 function chore(over: Partial<Chore>): Chore {
-  return { id: 'c1', family_id: 'f', title: 'זבל', icon: 'trash', points: 1, assigned_to: null, is_shower: false, per_day: 1, active: true, sort: 0, ...over }
+  return { id: 'c1', family_id: 'f', title: 'זבל', icon: 'trash', points: 1, assigned_to: null, is_shower: false, track_only: false, per_day: 1, active: true, sort: 0, ...over }
 }
 function comp(over: Partial<Completion>): Completion {
   return { id: Math.random().toString(), chore_id: 'c1', profile_id: 'a', family_id: 'f', completed_at: '2026-08-03T10:00:00+03:00', day: '2026-08-03', revoked_by: null, ...over }
@@ -55,10 +55,14 @@ describe('weeklyScores', () => {
     expect(scores['b']).toBe(1)
   })
 
-  it('shower completions are worth 0 points (tracking only)', () => {
+  it('shower and track-only completions are worth 0 points', () => {
     const shower = chore({ id: 'sh', is_shower: true, points: 1 })
-    const completions = [comp({ chore_id: 'sh', profile_id: 'a' })]
-    const scores = weeklyScores(completions, [], [shower, ...chores], [kidA, kidB], week)
+    const lesson = chore({ id: 'ls', track_only: true, points: 1 })
+    const completions = [
+      comp({ chore_id: 'sh', profile_id: 'a' }),
+      comp({ chore_id: 'ls', profile_id: 'a' }),
+    ]
+    const scores = weeklyScores(completions, [], [shower, lesson, ...chores], [kidA, kidB], week)
     expect(scores['a']).toBe(0)
   })
 

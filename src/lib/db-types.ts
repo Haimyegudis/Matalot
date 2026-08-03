@@ -36,6 +36,7 @@ export interface Chore {
   points: number
   assigned_to: string | null
   is_shower: boolean
+  track_only: boolean
   per_day: number
   active: boolean
   sort: number

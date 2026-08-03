@@ -161,6 +161,51 @@ export const CHORE_ICONS: Record<string, ReactNode> = {
     </Svg>
   ),
 
+  /* lessons / activities */
+  english: (
+    <Svg>
+      <path d="M6 10h30a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H20l-8 7v-7H10a4 4 0 0 1-4-4z" stroke={L} strokeWidth={W} strokeLinejoin="round" />
+      <text x="23" y="26" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="11" fill="#22d3ee">ABC</text>
+    </Svg>
+  ),
+  pencil: (
+    <Svg>
+      <path d="M30 8l10 10-22 22-11 3 3-11z" stroke={L} strokeWidth={W} strokeLinejoin="round" />
+      <path d="M26 12l10 10" stroke={L} strokeWidth={2.2} />
+      <path d="M10 32l6 6" stroke="#fbbf24" strokeWidth={2.4} strokeLinecap="round" />
+      <path d="M33 5l4-2 8 8-2 4z" stroke="#fb7185" strokeWidth={2.2} strokeLinejoin="round" />
+    </Svg>
+  ),
+  notebook: (
+    <Svg>
+      <rect x="12" y="6" width="26" height="36" rx="3.5" stroke={L} strokeWidth={W} />
+      <path d="M9 13h6M9 21h6M9 29h6M9 37h6" stroke="#8b5cf6" strokeWidth={2.4} strokeLinecap="round" />
+      <path d="M20 16h12m-12 7h12m-12 7h8" stroke={L} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  ),
+  board: (
+    <Svg>
+      <rect x="6" y="8" width="36" height="24" rx="2.5" stroke={L} strokeWidth={W} />
+      <path d="M12 16c4-3 8 3 12 0m-10 8h16" stroke="#2dd4bf" strokeWidth={2.2} strokeLinecap="round" />
+      <path d="M24 32v4m0 0l-8 8m8-8l8 8" stroke={L} strokeWidth={W} strokeLinecap="round" />
+    </Svg>
+  ),
+  gradcap: (
+    <Svg>
+      <path d="M24 10L4 19l20 9 20-9z" stroke={L} strokeWidth={W} strokeLinejoin="round" />
+      <path d="M12 24v9c0 3 5.5 6 12 6s12-3 12-6v-9" stroke={L} strokeWidth={W} strokeLinecap="round" />
+      <path d="M42 20v10" stroke="#fbbf24" strokeWidth={2.4} strokeLinecap="round" />
+      <circle cx="42" cy="32.5" r="2" fill="#fbbf24" />
+    </Svg>
+  ),
+  music: (
+    <Svg>
+      <path d="M18 36V12l20-4v24" stroke={L} strokeWidth={W} strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="13" cy="36" r="5" stroke="#fb7185" strokeWidth={W} />
+      <circle cx="33" cy="32" r="5" stroke="#fb7185" strokeWidth={W} />
+    </Svg>
+  ),
+
   /* legacy aliases (old rows) */
   dog: SpitzIcon,
   robot: RobotVacIcon,
@@ -168,6 +213,7 @@ export const CHORE_ICONS: Record<string, ReactNode> = {
 
 export const ICON_KEYS = [
   'trash', 'dishwasher', 'robotvac', 'spitz', 'dryer', 'shower',
+  'english', 'pencil', 'notebook', 'board', 'gradcap', 'music',
   'bed', 'book', 'star', 'broom', 'plant', 'dishes', 'laundry', 'toys',
 ]
 
@@ -179,13 +225,19 @@ export const ICON_LABELS: Record<string, string> = {
   dryer: 'מייבש',
   shower: 'מקלחת',
   bed: 'מיטה',
-  book: 'לימודים',
+  book: 'ספר',
   star: 'אחר',
   broom: 'טאטוא',
   plant: 'השקיה',
   dishes: 'כלים',
   laundry: 'כביסה',
   toys: 'סידור',
+  english: 'אנגלית',
+  pencil: 'שיעור',
+  notebook: 'מחברת',
+  board: 'מורה',
+  gradcap: 'לימודים',
+  music: 'מוזיקה',
   dog: 'כלב',
   robot: 'רובוט',
 }

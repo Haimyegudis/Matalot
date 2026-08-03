@@ -12,6 +12,7 @@ interface Draft {
   icon: string
   points: number
   per_day: number
+  track_only: boolean
   assigned_to: string | null
 }
 
@@ -30,7 +31,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
     if (draft.id) {
       await supabase
         .from('chores')
-        .update({ title: draft.title, icon: draft.icon, points: draft.points, per_day: draft.per_day, assigned_to: draft.assigned_to })
+        .update({ title: draft.title, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, assigned_to: draft.assigned_to })
         .eq('id', draft.id)
     } else {
       await supabase.from('chores').insert({
@@ -39,6 +40,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         icon: draft.icon,
         points: draft.points,
         per_day: draft.per_day,
+        track_only: draft.track_only,
         assigned_to: draft.assigned_to,
         sort: active.length,
       })
@@ -60,7 +62,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         <button
           key={c.id}
           className="card"
-          onClick={() => setDraft({ id: c.id, title: c.title, icon: c.icon, points: c.points, per_day: c.per_day ?? 1, assigned_to: c.assigned_to })}
+          onClick={() => setDraft({ id: c.id, title: c.title, icon: c.icon, points: c.points, per_day: c.per_day ?? 1, track_only: c.track_only ?? false, assigned_to: c.assigned_to })}
           style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', textAlign: 'start' }}
         >
           <ChoreIcon name={c.icon} size={40} />
@@ -68,7 +70,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
             <div style={{ fontWeight: 700 }}>{c.title}</div>
             <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)' }}>
               {c.assigned_to ? `של ${kids.find((k) => k.id === c.assigned_to)?.name ?? '?'}` : 'משותפת — מי שעושה מקבל'}
-              {' · '}+{c.points}
+              {c.track_only ? ' · למעקב בלבד' : ` · +${c.points}`}
               {(c.per_day ?? 1) > 1 ? ` · ×${c.per_day} ביום` : ''}
             </div>
           </div>
@@ -86,7 +88,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         </div>
       )}
 
-      <button className="btn" onClick={() => setDraft({ title: '', icon: 'star', points: 1, per_day: 1, assigned_to: null })}>
+      <button className="btn" onClick={() => setDraft({ title: '', icon: 'star', points: 1, per_day: 1, track_only: false, assigned_to: null })}>
         ➕ מטלה חדשה
       </button>
 
@@ -112,6 +114,15 @@ export function ManageChores({ data }: { data: FamilyData }) {
               <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem' }}>{draft.per_day}</span>
               <button className="btn btn--ghost" style={{ padding: '6px 14px' }} onClick={() => setDraft({ ...draft, per_day: Math.min(10, draft.per_day + 1) })}>+</button>
             </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700 }}>
+              <input
+                type="checkbox"
+                checked={draft.track_only}
+                onChange={(e) => setDraft({ ...draft, track_only: e.target.checked })}
+                style={{ width: 20, height: 20 }}
+              />
+              למעקב בלבד — בלי נקודות (חוגים, שיעורים)
+            </label>
             <select
               value={draft.assigned_to ?? ''}
               onChange={(e) => setDraft({ ...draft, assigned_to: e.target.value || null })}
