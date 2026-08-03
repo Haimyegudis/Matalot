@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
       const payload = JSON.stringify({
         title: '📌 מטלה חדשה',
-        body: `${title || 'מטלה'}${timeLabel ? ` · עד ${timeLabel}` : ''}`,
+        body: `${title || 'מטלה'}${timeLabel ? ` · ${timeLabel}` : ''}`,
         url: '/',
       })
       let sent = 0

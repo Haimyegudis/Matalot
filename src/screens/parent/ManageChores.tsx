@@ -5,6 +5,7 @@ import type { FamilyData } from '../../lib/store'
 import type { Chore } from '../../lib/db-types'
 import { ChoreIcon, IconPicker, ICON_LABELS } from '../../components/icons'
 import { Sheet } from '../../components/Sheet'
+import { NudgeCard } from './NudgeCard'
 import { dayKey } from '../../lib/logic'
 
 interface Draft {
@@ -18,18 +19,18 @@ interface Draft {
   /** null = daily, [] = general list, [0..6] = specific weekdays */
   days: number[] | null
   assigned_to: string | null
-  /** pulled into today's board (day_pick), on top of days=[] */
-  today: boolean
-  /** "HH:MM" reminder for the today pick; '' = none */
+  /** "YYYY-MM-DD" the chore is scheduled onto (day_pick); '' = not scheduled */
+  pickDay: string
+  /** "HH:MM" reminder for the scheduled day; '' = none */
   remindTime: string
-  /** chore had a today pick when the draft was opened */
-  hadTodayPick: boolean
+  /** the pick day that existed when the draft was opened; '' = none */
+  prevPickDay: string
 }
 
 const DAY_NAMES = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש']
 
 export function ManageChores({ data }: { data: FamilyData }) {
-  const { family, profiles } = useSession()
+  const { family, profiles, currentProfile } = useSession()
   const kids = profiles.filter((p) => p.role === 'child')
   const [draft, setDraft] = useState<Draft | null>(null)
   const [busy, setBusy] = useState(false)
@@ -37,14 +38,17 @@ export function ManageChores({ data }: { data: FamilyData }) {
   const active = data.chores.filter((c) => c.active && !c.is_shower)
   const shower = data.chores.find((c) => c.is_shower)
   const todayStr = dayKey(new Date())
-  const todayPickOf = (choreId: string) =>
-    data.dayPicks.find((p) => p.chore_id === choreId && p.day === todayStr)
+  // nearest current-or-future scheduling of the chore
+  const upcomingPickOf = (choreId: string) =>
+    data.dayPicks
+      .filter((p) => p.chore_id === choreId && p.day >= todayStr)
+      .sort((a, b) => (a.day < b.day ? -1 : 1))[0]
 
   async function saveDraft() {
     if (!draft) return
     setBusy(true)
     draft.title = draft.title.trim() || ICON_LABELS[draft.icon] || 'מטלה'
-    const days = draft.today ? [] : draft.days
+    const days = draft.pickDay ? [] : draft.days
     let choreId = draft.id
     if (draft.id) {
       await supabase
@@ -70,23 +74,31 @@ export function ManageChores({ data }: { data: FamilyData }) {
         .single()
       choreId = created?.id
     }
-    if (choreId && (draft.today || draft.hadTodayPick)) {
-      await supabase.from('day_picks').delete().eq('chore_id', choreId).eq('day', todayStr)
-      if (draft.today) {
+    if (choreId && (draft.pickDay || draft.prevPickDay)) {
+      if (draft.prevPickDay && draft.prevPickDay !== draft.pickDay) {
+        await supabase.from('day_picks').delete().eq('chore_id', choreId).eq('day', draft.prevPickDay)
+      }
+      if (draft.pickDay) {
+        await supabase.from('day_picks').delete().eq('chore_id', choreId).eq('day', draft.pickDay)
         const remindAt = draft.remindTime
-          ? new Date(`${todayStr}T${draft.remindTime}:00`).toISOString()
+          ? new Date(`${draft.pickDay}T${draft.remindTime}:00`).toISOString()
           : null
         await supabase.from('day_picks').insert({
           family_id: family!.id,
           chore_id: choreId,
-          day: todayStr,
+          day: draft.pickDay,
           child_id: draft.assigned_to,
           remind_at: remindAt,
         })
+        const d = new Date(`${draft.pickDay}T12:00:00`)
+        const timeLabel =
+          draft.pickDay === todayStr
+            ? draft.remindTime ? `עד ${draft.remindTime}` : null
+            : `${d.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'numeric' })}${draft.remindTime ? ` בשעה ${draft.remindTime}` : ''}`
         const recipients = draft.assigned_to ? [draft.assigned_to] : kids.map((k) => k.id)
         supabase.functions
           .invoke('send-push', {
-            body: { kind: 'assigned', profileIds: recipients, title: draft.title, timeLabel: draft.remindTime || null },
+            body: { kind: 'assigned', profileIds: recipients, title: draft.title, timeLabel },
           })
           .catch(() => {})
       }
@@ -109,14 +121,15 @@ export function ManageChores({ data }: { data: FamilyData }) {
           key={c.id}
           className="card"
           onClick={() => {
-            const pick = todayPickOf(c.id)
+            const pick = upcomingPickOf(c.id)
             const remind = pick?.remind_at ? new Date(pick.remind_at) : null
+            const pickDay = pick ? pick.day.slice(0, 10) : ''
             setDraft({
               id: c.id, title: c.title, note: c.note ?? '', icon: c.icon, points: c.points,
               per_day: c.per_day ?? 1, track_only: c.track_only ?? false, days: c.days, assigned_to: c.assigned_to,
-              today: !!pick,
+              pickDay,
               remindTime: remind ? `${String(remind.getHours()).padStart(2, '0')}:${String(remind.getMinutes()).padStart(2, '0')}` : '',
-              hadTodayPick: !!pick,
+              prevPickDay: pickDay,
             })
           }}
           style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', textAlign: 'start' }}
@@ -130,11 +143,15 @@ export function ManageChores({ data }: { data: FamilyData }) {
               {(c.per_day ?? 1) > 1 ? ` · ×${c.per_day} ביום` : ''}
               {c.days === null ? ' · יומית' : c.days.length === 0 ? ' · רשימה כללית' : ` · ${c.days.map((d) => DAY_NAMES[d]).join(',')}`}
               {(() => {
-                const pick = todayPickOf(c.id)
+                const pick = upcomingPickOf(c.id)
                 if (!pick) return ''
-                if (!pick.remind_at) return ' · היום'
+                const dayStr = pick.day.slice(0, 10)
+                const label = dayStr === todayStr
+                  ? 'היום'
+                  : new Date(`${dayStr}T12:00:00`).toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'numeric' })
+                if (!pick.remind_at) return ` · ${label}`
                 const t = new Date(pick.remind_at)
-                return ` · היום ⏰${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`
+                return ` · ${label} ⏰${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`
               })()}
             </div>
           </div>
@@ -152,9 +169,11 @@ export function ManageChores({ data }: { data: FamilyData }) {
         </div>
       )}
 
-      <button className="btn" onClick={() => setDraft({ title: '', note: '', icon: 'star', points: 1, per_day: 1, track_only: false, days: null, assigned_to: null, today: false, remindTime: '', hadTodayPick: false })}>
+      <button className="btn" onClick={() => setDraft({ title: '', note: '', icon: 'star', points: 1, per_day: 1, track_only: false, days: null, assigned_to: null, pickDay: '', remindTime: '', prevPickDay: '' })}>
         ➕ מטלה חדשה
       </button>
+
+      <NudgeCard kids={kids} familyId={family!.id} senderName={currentProfile?.name ?? ''} />
 
       <Sheet open={draft !== null} onClose={() => setDraft(null)}>
         {draft && (
@@ -189,20 +208,20 @@ export function ManageChores({ data }: { data: FamilyData }) {
               <span style={{ fontWeight: 700 }}>מתי מופיעה:</span>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {([
-                  ['today', 'היום'],
+                  ['date', 'בתאריך'],
                   ['daily', 'כל יום'],
                   ['general', 'רשימה כללית'],
                   ['days', 'ימים מסוימים'],
                 ] as const).map(([mode, label]) => {
-                  const current = draft.today ? 'today' : draft.days === null ? 'daily' : draft.days.length === 0 ? 'general' : 'days'
+                  const current = draft.pickDay ? 'date' : draft.days === null ? 'daily' : draft.days.length === 0 ? 'general' : 'days'
                   return (
                     <button
                       key={mode}
                       onClick={() =>
                         setDraft({
                           ...draft,
-                          today: mode === 'today',
-                          days: mode === 'today' || mode === 'general' ? [] : mode === 'daily' ? null : [0],
+                          pickDay: mode === 'date' ? draft.prevPickDay || todayStr : '',
+                          days: mode === 'date' || mode === 'general' ? [] : mode === 'daily' ? null : [0],
                         })
                       }
                       style={{
@@ -220,19 +239,32 @@ export function ManageChores({ data }: { data: FamilyData }) {
                   )
                 })}
               </div>
-              {draft.today && (
-                <label style={{ fontWeight: 700, fontSize: '0.85rem' }}>
-                  ⏰ תזכורת בשעה (אופציונלי)
-                  <input
-                    type="time"
-                    dir="ltr"
-                    value={draft.remindTime}
-                    onChange={(e) => setDraft({ ...draft, remindTime: e.target.value })}
-                    style={{ marginTop: 6 }}
-                  />
-                </label>
+              {draft.pickDay && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <label style={{ fontWeight: 700, fontSize: '0.85rem', flex: 1 }}>
+                    📅 תאריך
+                    <input
+                      type="date"
+                      dir="ltr"
+                      min={todayStr}
+                      value={draft.pickDay}
+                      onChange={(e) => setDraft({ ...draft, pickDay: e.target.value || todayStr })}
+                      style={{ marginTop: 6 }}
+                    />
+                  </label>
+                  <label style={{ fontWeight: 700, fontSize: '0.85rem', flex: 1 }}>
+                    ⏰ שעה (אופציונלי)
+                    <input
+                      type="time"
+                      dir="ltr"
+                      value={draft.remindTime}
+                      onChange={(e) => setDraft({ ...draft, remindTime: e.target.value })}
+                      style={{ marginTop: 6 }}
+                    />
+                  </label>
+                </div>
               )}
-              {!draft.today && draft.days !== null && draft.days.length > 0 && (
+              {!draft.pickDay && draft.days !== null && draft.days.length > 0 && (
                 <div style={{ display: 'flex', gap: 5 }}>
                   {DAY_NAMES.map((d, i) => {
                     const on = draft.days!.includes(i)

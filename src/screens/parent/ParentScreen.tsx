@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import type { FamilyData } from '../../lib/store'
 import { WeekBoard } from './WeekBoard'
 import { ManageChores } from './ManageChores'
-import { NewTask } from './NewTask'
 import { Settings } from './Settings'
 
 const TABS = [
   { key: 'board', emoji: '📊', label: 'לוח' },
   { key: 'chores', emoji: '🧹', label: 'מטלות' },
-  { key: 'task', emoji: '📣', label: 'התראות' },
   { key: 'settings', emoji: '⚙️', label: 'הגדרות' },
 ] as const
 
@@ -26,7 +24,7 @@ export function ParentScreen({ data }: { data: FamilyData }) {
         </button>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -53,7 +51,6 @@ export function ParentScreen({ data }: { data: FamilyData }) {
 
       {tab === 'board' && <WeekBoard data={data} />}
       {tab === 'chores' && <ManageChores data={data} />}
-      {tab === 'task' && <NewTask onCreated={() => setTab('board')} />}
       {tab === 'settings' && <Settings />}
     </div>
   )
