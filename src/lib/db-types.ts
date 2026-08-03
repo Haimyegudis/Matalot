@@ -43,6 +43,8 @@ export interface Chore {
   days: number[] | null
   /** kids alternate; next in turn = sibling of last doer */
   turn_taking: boolean
+  /** one doer per round (first-come); default false = everyone can do it and earn */
+  single_daily: boolean
   active: boolean
   sort: number
 }

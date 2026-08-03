@@ -211,6 +211,15 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           const rows = dayCompletions.filter((c) => c.chore_id === chore.id)
           const mine = rows.some((c) => c.profile_id === me.id)
           const names = [...new Set(rows.map((c) => nameOf(c.profile_id)))]
+          // together-chores count per kid: my tile closes when I hit per_day;
+          // parent's tile closes only when every kid did
+          const together = !chore.single_daily && !chore.turn_taking && !chore.assigned_to
+          const countOf = (pid: string) => rows.filter((c) => c.profile_id === pid).length
+          const doneCount = together
+            ? me.role === 'parent' && kids.length > 0
+              ? Math.min(...kids.map((k) => countOf(k.id)))
+              : countOf(me.id)
+            : rows.length
           const remindPick = todayPicks.find(
             (p) =>
               p.chore_id === chore.id &&
@@ -230,7 +239,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
             <ChoreButton
               key={removable ? undefined : chore.id}
               chore={chore}
-              doneCount={rows.length}
+              doneCount={doneCount}
               doneByNames={names}
               doneByMe={mine}
               assignedOther={

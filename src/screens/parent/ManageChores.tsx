@@ -17,6 +17,7 @@ interface Draft {
   per_day: number
   track_only: boolean
   turn_taking: boolean
+  single_daily: boolean
   /** null = daily, [] = general list, [0..6] = specific weekdays */
   days: number[] | null
   assigned_to: string | null
@@ -54,7 +55,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
     if (draft.id) {
       await supabase
         .from('chores')
-        .update({ title: draft.title, note: draft.note.trim() || null, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, turn_taking: draft.turn_taking, days, assigned_to: draft.assigned_to })
+        .update({ title: draft.title, note: draft.note.trim() || null, icon: draft.icon, points: draft.points, per_day: draft.per_day, track_only: draft.track_only, turn_taking: draft.turn_taking, single_daily: draft.single_daily, days, assigned_to: draft.assigned_to })
         .eq('id', draft.id)
     } else {
       const { data: created } = await supabase
@@ -68,6 +69,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
           per_day: draft.per_day,
           track_only: draft.track_only,
           turn_taking: draft.turn_taking,
+          single_daily: draft.single_daily,
           days,
           assigned_to: draft.assigned_to,
           sort: active.length,
@@ -118,7 +120,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
             const pickDay = pick ? pick.day.slice(0, 10) : ''
             setDraft({
               id: c.id, title: c.title, note: c.note ?? '', icon: c.icon, points: c.points,
-              per_day: c.per_day ?? 1, track_only: c.track_only ?? false, turn_taking: c.turn_taking ?? false, days: c.days, assigned_to: c.assigned_to,
+              per_day: c.per_day ?? 1, track_only: c.track_only ?? false, turn_taking: c.turn_taking ?? false, single_daily: c.single_daily ?? false, days: c.days, assigned_to: c.assigned_to,
               pickDay,
               remindTime: remind ? `${String(remind.getHours()).padStart(2, '0')}:${String(remind.getMinutes()).padStart(2, '0')}` : '',
               prevPickDay: pickDay,
@@ -130,7 +132,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700 }}>{c.title}</div>
             <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)' }}>
-              {c.assigned_to ? `של ${kids.find((k) => k.id === c.assigned_to)?.name ?? '?'}` : 'משותפת — מי שעושה מקבל'}
+              {c.assigned_to ? `של ${kids.find((k) => k.id === c.assigned_to)?.name ?? '?'}` : c.single_daily ? 'משותפת — הראשון שעושה מקבל' : 'משותפת — שניהם יכולים'}
               {c.track_only ? ' · בלי נקודות' : ` · +${c.points}`}
               {(c.per_day ?? 1) > 1 ? ` · ×${c.per_day} ביום` : ''}
               {c.days === null ? ' · יומית' : c.days.length === 0 ? ' · רשימה כללית' : ` · ${c.days.map((d) => DAY_NAMES[d]).join(',')}`}
@@ -161,7 +163,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         </div>
       )}
 
-      <button className="btn" onClick={() => setDraft({ title: '', note: '', icon: 'star', points: 1, per_day: 1, track_only: false, turn_taking: false, days: null, assigned_to: null, pickDay: '', remindTime: '', prevPickDay: '' })}>
+      <button className="btn" onClick={() => setDraft({ title: '', note: '', icon: 'star', points: 1, per_day: 1, track_only: false, turn_taking: false, single_daily: false, days: null, assigned_to: null, pickDay: '', remindTime: '', prevPickDay: '' })}>
         ➕ מטלה חדשה
       </button>
 
@@ -301,6 +303,15 @@ export function ManageChores({ data }: { data: FamilyData }) {
                 style={{ width: 20, height: 20 }}
               />
               🔁 בתורות — הילדים מתחלפים, מוצג מי הבא בתור
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700 }}>
+              <input
+                type="checkbox"
+                checked={draft.single_daily}
+                onChange={(e) => setDraft({ ...draft, single_daily: e.target.checked })}
+                style={{ width: 20, height: 20 }}
+              />
+              ☝️ רק אחד מבצע — הראשון שעושה מקבל (בלי זה: שניהם יכולים ולקבל נקודות)
             </label>
             <select
               value={draft.assigned_to ?? ''}
