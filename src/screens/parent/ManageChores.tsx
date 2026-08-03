@@ -3,7 +3,7 @@ import { useSession } from '../../lib/session'
 import { supabase } from '../../lib/supabase'
 import type { FamilyData } from '../../lib/store'
 import type { Chore } from '../../lib/db-types'
-import { ChoreIcon, IconPicker } from '../../components/icons'
+import { ChoreIcon, IconPicker, ICON_LABELS } from '../../components/icons'
 import { Sheet } from '../../components/Sheet'
 
 interface Draft {
@@ -30,8 +30,9 @@ export function ManageChores({ data }: { data: FamilyData }) {
   const shower = data.chores.find((c) => c.is_shower)
 
   async function saveDraft() {
-    if (!draft || !draft.title.trim()) return
+    if (!draft) return
     setBusy(true)
+    draft.title = draft.title.trim() || ICON_LABELS[draft.icon] || 'מטלה'
     if (draft.id) {
       await supabase
         .from('chores')
@@ -196,7 +197,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
                 <option key={k.id} value={k.id}>רק {k.name}</option>
               ))}
             </select>
-            <button className="btn btn--teal" onClick={saveDraft} disabled={busy || !draft.title.trim()}>
+            <button className="btn btn--teal" onClick={saveDraft} disabled={busy}>
               שמירה
             </button>
             {draft.id && (

@@ -37,7 +37,7 @@ export function ParentScreen({ data }: { data: FamilyData }) {
               whiteSpace: 'nowrap',
               fontWeight: 700,
               fontSize: '0.88rem',
-              background: tab === t.key ? 'var(--ink)' : 'var(--paper)',
+              background: tab === t.key ? 'var(--grape)' : 'rgba(255,255,255,.06)',
               color: tab === t.key ? '#fff' : 'var(--ink)',
               border: 'var(--border)',
             }}

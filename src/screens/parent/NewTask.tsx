@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSession } from '../../lib/session'
 import { supabase } from '../../lib/supabase'
-import { IconPicker } from '../../components/icons'
+import { IconPicker, ICON_LABELS } from '../../components/icons'
 
 export function NewTask({ onCreated }: { onCreated: () => void }) {
   const { family, profiles } = useSession()
@@ -19,7 +19,7 @@ export function NewTask({ onCreated }: { onCreated: () => void }) {
     await supabase.from('tasks').insert({
       family_id: family!.id,
       child_id: childId,
-      title,
+      title: title.trim() || ICON_LABELS[icon] || 'משימה',
       icon,
       points,
       remind_at: remindAt ? new Date(remindAt).toISOString() : null,
@@ -66,7 +66,7 @@ export function NewTask({ onCreated }: { onCreated: () => void }) {
         תזכורת (אופציונלי):
         <input type="datetime-local" dir="ltr" value={remindAt} onChange={(e) => setRemindAt(e.target.value)} style={{ marginTop: 6 }} />
       </label>
-      <button className="btn" onClick={create} disabled={busy || !title.trim() || !childId}>
+      <button className="btn" onClick={create} disabled={busy || !childId}>
         {done ? '✓ נשלחה!' : 'שליחת המשימה'}
       </button>
     </div>

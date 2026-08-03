@@ -6,7 +6,7 @@ import { weekBounds, weeklyScores, dayKey } from '../lib/logic'
 import { ChoreButton } from '../components/ChoreButton'
 import { ScoreBar } from '../components/ScoreBar'
 import { ShowerCard } from '../components/ShowerCard'
-import { ChoreIcon, IconPicker } from '../components/icons'
+import { ChoreIcon, IconPicker, ICON_LABELS } from '../components/icons'
 import { Sheet } from '../components/Sheet'
 import { playMagic } from '../lib/sound'
 
@@ -58,10 +58,9 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const dateLabel = target.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })
 
   async function addChore() {
-    if (!newTitle.trim()) return
     const { error } = await supabase.from('chores').insert({
       family_id: me.family_id,
-      title: newTitle.trim(),
+      title: newTitle.trim() || ICON_LABELS[newIcon] || 'מטלה',
       icon: newIcon,
       points: 1,
       per_day: 1,
@@ -252,12 +251,12 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
       <Sheet open={adding} onClose={() => setAdding(false)}>
         <div style={{ display: 'grid', gap: 12, paddingBottom: 8 }}>
           <h2 style={{ fontSize: '1.15rem' }}>מטלה חדשה</h2>
-          <input value={newTitle} placeholder="מה עשית / מה צריך לעשות?" onChange={(e) => setNewTitle(e.target.value)} />
+          <input value={newTitle} placeholder="שם המטלה (לא חובה — יילקח מהאייקון)" onChange={(e) => setNewTitle(e.target.value)} />
           <IconPicker value={newIcon} onChange={setNewIcon} />
           <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>
             המטלה תהיה משותפת ושווה נקודה אחת. הורה יכול לערוך אותה במצב הורה.
           </div>
-          <button className="btn" onClick={addChore} disabled={!newTitle.trim()}>
+          <button className="btn" onClick={addChore}>
             הוספה
           </button>
         </div>
