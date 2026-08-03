@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSession } from '../../lib/session'
 import { supabase } from '../../lib/supabase'
-import { ChoreIcon, ICON_KEYS } from '../../components/icons'
+import { IconPicker } from '../../components/icons'
 
 export function NewTask({ onCreated }: { onCreated: () => void }) {
   const { family, profiles } = useSession()
@@ -55,21 +55,7 @@ export function NewTask({ onCreated }: { onCreated: () => void }) {
         ))}
       </div>
       <input value={title} placeholder="מה צריך לעשות?" onChange={(e) => setTitle(e.target.value)} />
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        {ICON_KEYS.map((k) => (
-          <button
-            key={k}
-            onClick={() => setIcon(k)}
-            style={{
-              width: 50, height: 50, borderRadius: 12,
-              border: icon === k ? '3px solid var(--grape)' : 'var(--border)',
-              background: 'var(--paper)', display: 'grid', placeItems: 'center',
-            }}
-          >
-            <ChoreIcon name={k} size={34} />
-          </button>
-        ))}
-      </div>
+      <IconPicker value={icon} onChange={setIcon} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ fontWeight: 700 }}>נקודות:</span>
         <button className="btn btn--ghost" style={{ padding: '6px 14px' }} onClick={() => setPoints(Math.max(1, points - 1))}>−</button>

@@ -3,7 +3,7 @@ import { useSession } from '../../lib/session'
 import { supabase } from '../../lib/supabase'
 import type { FamilyData } from '../../lib/store'
 import type { Chore } from '../../lib/db-types'
-import { ChoreIcon, ICON_KEYS } from '../../components/icons'
+import { ChoreIcon, IconPicker } from '../../components/icons'
 import { Sheet } from '../../components/Sheet'
 
 interface Draft {
@@ -99,25 +99,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
               placeholder="שם המטלה"
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
             />
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {ICON_KEYS.map((k) => (
-                <button
-                  key={k}
-                  onClick={() => setDraft({ ...draft, icon: k })}
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 14,
-                    border: draft.icon === k ? '3px solid var(--grape)' : 'var(--border)',
-                    background: 'var(--paper)',
-                    display: 'grid',
-                    placeItems: 'center',
-                  }}
-                >
-                  <ChoreIcon name={k} size={38} />
-                </button>
-              ))}
-            </div>
+            <IconPicker value={draft.icon} onChange={(k) => setDraft({ ...draft, icon: k })} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontWeight: 700 }}>נקודות:</span>
               <button className="btn btn--ghost" style={{ padding: '6px 14px' }} onClick={() => setDraft({ ...draft, points: Math.max(1, draft.points - 1) })}>−</button>

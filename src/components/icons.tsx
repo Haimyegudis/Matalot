@@ -51,22 +51,21 @@ const RobotVacIcon = (
   </Svg>
 )
 
-/* להוציא את שלג — white spitz head: pointy ears, collar + tag (visually verified) */
+/* להוציא את שלג — dog head: floppy ears, muzzle, tongue, collar (visually verified) */
 const SpitzIcon = (
   <Svg>
-    <path d="M11 16 L8 4 L20 9 Z" fill="#fff" stroke={L} strokeWidth={2} strokeLinejoin="round" />
-    <path d="M37 16 L40 4 L28 9 Z" fill="#fff" stroke={L} strokeWidth={2} strokeLinejoin="round" />
-    <path d="M11.5 13.5 L10.5 8 L16 10.5 Z" fill="#fbb1c0" />
-    <path d="M36.5 13.5 L37.5 8 L32 10.5 Z" fill="#fbb1c0" />
-    <circle cx="24" cy="23" r="14.5" fill="#fff" stroke={L} strokeWidth={2} />
-    <path d="M10.5 28 C8 30 8 33 10 35 M37.5 28 C40 30 40 33 38 35" stroke={L} strokeWidth={2} fill="#fff" strokeLinecap="round" />
-    <ellipse cx="18.5" cy="21" rx="2" ry="2.4" fill="#1b1729" />
-    <ellipse cx="29.5" cy="21" rx="2" ry="2.4" fill="#1b1729" />
-    <path d="M21.5 27.5 L26.5 27.5 L24 30.5 Z" fill="#1b1729" />
-    <path d="M24 30.5 L24 32.5 M24 32.5 C22.5 34.5 20 34.5 19 33 M24 32.5 C25.5 34.5 28 34.5 29 33" stroke="#1b1729" strokeWidth={1.8} fill="none" strokeLinecap="round" />
-    <path d="M22.5 34.5 C22.5 37 25.5 37 25.5 34.5 L25.2 33.6 L22.8 33.6 Z" fill="#fb7185" />
-    <path d="M14 34.5 C17 38.5 31 38.5 34 34.5 L34.5 37.5 C30.5 41.5 17.5 41.5 13.5 37.5 Z" fill="#fb7185" stroke="#e4566b" strokeWidth={1} />
-    <circle cx="24" cy="40.5" r="2.6" fill="#fbbf24" stroke="#e4a90f" strokeWidth={1} />
+    <path d="M13 11 C6 12 4 20 6 28 C7 32 10 33 12.5 31 L15 17 Z" fill="#e8e2fb" stroke="#c9c0ea" strokeWidth={2} strokeLinejoin="round" />
+    <path d="M35 11 C42 12 44 20 42 28 C41 32 38 33 35.5 31 L33 17 Z" fill="#e8e2fb" stroke="#c9c0ea" strokeWidth={2} strokeLinejoin="round" />
+    <circle cx="24" cy="23" r="14" fill="#fff" stroke={L} strokeWidth={2} />
+    <ellipse cx="18.5" cy="19.5" rx="2" ry="2.4" fill="#1b1729" />
+    <ellipse cx="29.5" cy="19.5" rx="2" ry="2.4" fill="#1b1729" />
+    <ellipse cx="24" cy="29" rx="8" ry="6.5" fill="#fff" stroke={L} strokeWidth={1.8} />
+    <path d="M20.5 25.5 A4 3.4 0 0 1 27.5 25.5 A3.5 3 0 0 1 24 28.4 A3.5 3 0 0 1 20.5 25.5 Z" fill="#1b1729" />
+    <path d="M24 28.4 L24 31 M24 31 C22 33 20 33 19 31.5 M24 31 C26 33 28 33 29 31.5" stroke="#1b1729" strokeWidth={1.7} fill="none" strokeLinecap="round" />
+    <path d="M21.8 32.8 C21.8 37.5 26.2 37.5 26.2 32.8 L25.8 31.8 L22.2 31.8 Z" fill="#fb7185" stroke="#e4566b" strokeWidth={1} />
+    <path d="M24 32.5 L24 35.5" stroke="#e4566b" strokeWidth={1} />
+    <path d="M15 35 C18.5 38.5 29.5 38.5 33 35 L33.5 38 C29.5 42 18.5 42 14.5 38 Z" fill="#8b5cf6" stroke="#6d3ee8" strokeWidth={1} />
+    <circle cx="24" cy="41" r="2.4" fill="#fbbf24" stroke="#e4a90f" strokeWidth={1} />
   </Svg>
 )
 
@@ -171,6 +170,53 @@ export const ICON_KEYS = [
   'trash', 'dishwasher', 'robotvac', 'spitz', 'dryer', 'shower',
   'bed', 'book', 'star', 'broom', 'plant', 'dishes', 'laundry', 'toys',
 ]
+
+export const ICON_LABELS: Record<string, string> = {
+  trash: 'זבל',
+  dishwasher: 'מדיח',
+  robotvac: 'רובוט',
+  spitz: 'כלב',
+  dryer: 'מייבש',
+  shower: 'מקלחת',
+  bed: 'מיטה',
+  book: 'לימודים',
+  star: 'אחר',
+  broom: 'טאטוא',
+  plant: 'השקיה',
+  dishes: 'כלים',
+  laundry: 'כביסה',
+  toys: 'סידור',
+  dog: 'כלב',
+  robot: 'רובוט',
+}
+
+/** Icon picker button grid with labels — shared by all "choose icon" UIs. */
+export function IconPicker({ value, onChange }: { value: string; onChange: (k: string) => void }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      {ICON_KEYS.map((k) => (
+        <button
+          key={k}
+          onClick={() => onChange(k)}
+          style={{
+            width: 64,
+            padding: '8px 2px 6px',
+            borderRadius: 12,
+            border: value === k ? '3px solid var(--grape)' : 'var(--border)',
+            background: 'rgba(255,255,255,.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+          }}
+        >
+          <ChoreIcon name={k} size={34} />
+          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--ink-soft)' }}>{ICON_LABELS[k]}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
 
 /* plate=true puts the icon on a light chip — needed only on light surfaces */
 export function ChoreIcon({ name, size, plate = false }: { name: string; size?: number; plate?: boolean }) {

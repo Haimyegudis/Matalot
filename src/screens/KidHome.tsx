@@ -7,7 +7,7 @@ import { weekBounds, weeklyScores, dayKey } from '../lib/logic'
 import { ChoreButton } from '../components/ChoreButton'
 import { ScoreBar } from '../components/ScoreBar'
 import { ShowerCard } from '../components/ShowerCard'
-import { ChoreIcon, ICON_KEYS } from '../components/icons'
+import { ChoreIcon, IconPicker } from '../components/icons'
 import { Sheet } from '../components/Sheet'
 
 export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boolean }) {
@@ -190,25 +190,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
         <div style={{ display: 'grid', gap: 12, paddingBottom: 8 }}>
           <h2 style={{ fontSize: '1.15rem' }}>מטלה חדשה</h2>
           <input value={newTitle} placeholder="מה עשית / מה צריך לעשות?" onChange={(e) => setNewTitle(e.target.value)} />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {ICON_KEYS.map((k) => (
-              <button
-                key={k}
-                onClick={() => setNewIcon(k)}
-                style={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: 12,
-                  border: newIcon === k ? '3px solid var(--grape)' : 'var(--border)',
-                  background: 'rgba(255,255,255,.05)',
-                  display: 'grid',
-                  placeItems: 'center',
-                }}
-              >
-                <ChoreIcon name={k} size={34} />
-              </button>
-            ))}
-          </div>
+          <IconPicker value={newIcon} onChange={setNewIcon} />
           <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>
             המטלה תהיה משותפת ושווה נקודה אחת. הורה יכול לערוך אותה במצב הורה.
           </div>
