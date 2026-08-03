@@ -221,7 +221,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
             me.role === 'parent'
               ? todayPicks.find((p) => p.chore_id === chore.id && p.child_id)?.child_id ?? null
               : null
-          const nextId = chore.turn_taking ? nextInTurn(data.completions, chore.id, kids) : null
+          const nextId = chore.turn_taking && !yesterday ? nextInTurn(data.completions, chore.id, kids) : null
           const nextKid = kids.find((k) => k.id === nextId)
           // parent can remove a chore that was pulled onto today's board
           const removable =
