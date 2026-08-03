@@ -14,6 +14,11 @@ export function weekBounds(d: Date): { start: Date; end: Date } {
   return { start, end }
 }
 
+/** Points per chore — shower is tracking-only, worth 0. */
+export function chorePointsMap(chores: Chore[]): Map<string, number> {
+  return new Map(chores.map((c) => [c.id, c.is_shower ? 0 : c.points]))
+}
+
 export function weeklyScores(
   completions: Completion[],
   tasks: TaskRow[],
@@ -21,7 +26,7 @@ export function weeklyScores(
   profiles: Profile[],
   week: { start: Date; end: Date },
 ): Record<string, number> {
-  const points = new Map(chores.map((c) => [c.id, c.points]))
+  const points = chorePointsMap(chores)
   const scores: Record<string, number> = {}
   for (const p of profiles) scores[p.id] = 0
 

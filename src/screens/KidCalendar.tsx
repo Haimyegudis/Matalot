@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSession } from '../lib/session'
 import type { FamilyData } from '../lib/store'
-import { dayKey } from '../lib/logic'
+import { dayKey, chorePointsMap } from '../lib/logic'
 import { Sheet } from '../components/Sheet'
 import { ChoreIcon } from '../components/icons'
 
@@ -20,7 +20,7 @@ export function KidCalendar({ data }: { data: FamilyData }) {
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const leading = first.getDay()
 
-  const chorePoints = new Map(data.chores.map((c) => [c.id, c.points]))
+  const chorePoints = chorePointsMap(data.chores)
   const choreById = new Map(data.chores.map((c) => [c.id, c]))
 
   const myCompletions = data.completions.filter((c) => c.profile_id === me.id && !c.revoked_by)

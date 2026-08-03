@@ -11,6 +11,7 @@ interface Draft {
   title: string
   icon: string
   points: number
+  per_day: number
   assigned_to: string | null
 }
 
@@ -29,7 +30,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
     if (draft.id) {
       await supabase
         .from('chores')
-        .update({ title: draft.title, icon: draft.icon, points: draft.points, assigned_to: draft.assigned_to })
+        .update({ title: draft.title, icon: draft.icon, points: draft.points, per_day: draft.per_day, assigned_to: draft.assigned_to })
         .eq('id', draft.id)
     } else {
       await supabase.from('chores').insert({
@@ -37,6 +38,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         title: draft.title,
         icon: draft.icon,
         points: draft.points,
+        per_day: draft.per_day,
         assigned_to: draft.assigned_to,
         sort: active.length,
       })
@@ -58,7 +60,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         <button
           key={c.id}
           className="card"
-          onClick={() => setDraft({ id: c.id, title: c.title, icon: c.icon, points: c.points, assigned_to: c.assigned_to })}
+          onClick={() => setDraft({ id: c.id, title: c.title, icon: c.icon, points: c.points, per_day: c.per_day ?? 1, assigned_to: c.assigned_to })}
           style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', textAlign: 'start' }}
         >
           <ChoreIcon name={c.icon} size={40} />
@@ -66,7 +68,8 @@ export function ManageChores({ data }: { data: FamilyData }) {
             <div style={{ fontWeight: 700 }}>{c.title}</div>
             <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)' }}>
               {c.assigned_to ? `של ${kids.find((k) => k.id === c.assigned_to)?.name ?? '?'}` : 'משותפת — מי שעושה מקבל'}
-              {' · '}⭐{c.points}
+              {' · '}+{c.points}
+              {(c.per_day ?? 1) > 1 ? ` · ×${c.per_day} ביום` : ''}
             </div>
           </div>
           <span style={{ color: 'var(--ink-soft)' }}>✏️</span>
@@ -83,7 +86,7 @@ export function ManageChores({ data }: { data: FamilyData }) {
         </div>
       )}
 
-      <button className="btn" onClick={() => setDraft({ title: '', icon: 'star', points: 1, assigned_to: null })}>
+      <button className="btn" onClick={() => setDraft({ title: '', icon: 'star', points: 1, per_day: 1, assigned_to: null })}>
         ➕ מטלה חדשה
       </button>
 
@@ -120,6 +123,12 @@ export function ManageChores({ data }: { data: FamilyData }) {
               <button className="btn btn--ghost" style={{ padding: '6px 14px' }} onClick={() => setDraft({ ...draft, points: Math.max(1, draft.points - 1) })}>−</button>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem' }}>{draft.points}</span>
               <button className="btn btn--ghost" style={{ padding: '6px 14px' }} onClick={() => setDraft({ ...draft, points: Math.min(99, draft.points + 1) })}>+</button>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontWeight: 700 }}>פעמים ביום:</span>
+              <button className="btn btn--ghost" style={{ padding: '6px 14px' }} onClick={() => setDraft({ ...draft, per_day: Math.max(1, draft.per_day - 1) })}>−</button>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem' }}>{draft.per_day}</span>
+              <button className="btn btn--ghost" style={{ padding: '6px 14px' }} onClick={() => setDraft({ ...draft, per_day: Math.min(10, draft.per_day + 1) })}>+</button>
             </div>
             <select
               value={draft.assigned_to ?? ''}

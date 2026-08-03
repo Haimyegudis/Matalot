@@ -39,11 +39,11 @@ function GenderPick({
    Also serves as the login screen for additional devices. */
 
 const DEFAULT_CHORES = [
-  { title: 'לזרוק זבל', icon: 'trash', sort: 0 },
-  { title: 'לפנות מדיח', icon: 'dishwasher', sort: 1 },
-  { title: 'לנקות את רוקי', icon: 'robotvac', sort: 2 },
-  { title: 'להוציא את שלג לטיול', icon: 'spitz', sort: 3 },
-  { title: 'בגדים למייבש כביסה', icon: 'dryer', sort: 4 },
+  { title: 'לזרוק זבל', icon: 'trash', per_day: 2, sort: 0 },
+  { title: 'לפנות מדיח', icon: 'dishwasher', per_day: 1, sort: 1 },
+  { title: 'לנקות את רוקי', icon: 'robotvac', per_day: 1, sort: 2 },
+  { title: 'להוציא את שלג לטיול', icon: 'spitz', per_day: 1, sort: 3 },
+  { title: 'בגדים למייבש כביסה', icon: 'dryer', per_day: 1, sort: 4 },
 ]
 
 export function SetupScreen() {
@@ -114,7 +114,7 @@ export function SetupScreen() {
     ])
     const { error: choreErr } = await supabase.from('chores').insert([
       ...DEFAULT_CHORES.map((c) => ({ ...c, is_shower: false, family_id: fam.id })),
-      { title: 'מקלחת', icon: 'shower', is_shower: true, family_id: fam.id, sort: 9 },
+      { title: 'מקלחת', icon: 'shower', per_day: 1, is_shower: true, family_id: fam.id, sort: 9 },
     ])
     if (profErr || choreErr) {
       setError((profErr ?? choreErr)!.message)

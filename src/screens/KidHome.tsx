@@ -122,13 +122,15 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
 
       <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         {activeChores.map((chore) => {
-          const completion = dayCompletions.find((c) => c.chore_id === chore.id)
-          const mine = dayCompletions.some((c) => c.chore_id === chore.id && c.profile_id === me.id)
+          const rows = dayCompletions.filter((c) => c.chore_id === chore.id)
+          const mine = rows.some((c) => c.profile_id === me.id)
+          const names = [...new Set(rows.map((c) => nameOf(c.profile_id)))]
           return (
             <ChoreButton
               key={chore.id}
               chore={chore}
-              doneBy={completion && !mine ? nameOf(completion.profile_id) : null}
+              doneCount={rows.length}
+              doneByNames={names}
               doneByMe={mine}
               readonly={yesterday}
               onDone={() => doChore(chore.id)}

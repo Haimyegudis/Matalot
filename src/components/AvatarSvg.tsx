@@ -230,10 +230,7 @@ export function AvatarSvg({ config, size = 64 }: { config: AvatarConfig | null; 
       {/* head */}
       <circle cx="50" cy="48" r="26" fill={c.skin} stroke={S} strokeWidth={W} />
       <Eyes style={c.eyes} />
-      {/* smile + cheeks */}
-      <path d="M44 58c3.5 3.5 8.5 3.5 12 0" stroke={S} strokeWidth={2.6} strokeLinecap="round" fill="none" />
-      <circle cx="33" cy="56" r="3.4" fill="#ff8fab" opacity="0.55" />
-      <circle cx="67" cy="56" r="3.4" fill="#ff8fab" opacity="0.55" />
+      <path d="M45 58.5c3 2.8 7 2.8 10 0" stroke={S} strokeWidth={2.4} strokeLinecap="round" fill="none" />
       <Hair style={c.hair} color={c.hairColor} />
       <Accessory kind={c.accessory} />
     </svg>

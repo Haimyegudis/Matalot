@@ -5,21 +5,25 @@ import { Burst } from './Burst'
 
 interface Props {
   chore: Chore
-  /** name of whoever already did it (shared chores), null if open */
-  doneBy: string | null
-  /** current kid already did it */
+  /** live completions of this chore today */
+  doneCount: number
+  /** names of kids who completed it today (shared chores) */
+  doneByNames: string[]
+  /** current kid completed it at least once today */
   doneByMe: boolean
   readonly?: boolean
   onDone: () => Promise<void>
 }
 
-export function ChoreButton({ chore, doneBy, doneByMe, readonly, onDone }: Props) {
+export function ChoreButton({ chore, doneCount, doneByNames, doneByMe, readonly, onDone }: Props) {
   const [bursting, setBursting] = useState(false)
   const [busy, setBusy] = useState(false)
-  const done = doneByMe || doneBy !== null
+  const perDay = chore.per_day ?? 1
+  const closed = doneCount >= perDay
+  const started = doneCount > 0
 
   async function handleTap() {
-    if (done || readonly || busy) return
+    if (closed || readonly || busy) return
     setBusy(true)
     setBursting(true)
     try {
@@ -30,10 +34,12 @@ export function ChoreButton({ chore, doneBy, doneByMe, readonly, onDone }: Props
     }
   }
 
+  const othersLabel = doneByNames.filter(Boolean).join(', ')
+
   return (
     <button
       onClick={handleTap}
-      disabled={readonly && !done}
+      disabled={readonly && !closed}
       className="card"
       style={{
         position: 'relative',
@@ -43,20 +49,39 @@ export function ChoreButton({ chore, doneBy, doneByMe, readonly, onDone }: Props
         gap: 8,
         padding: '16px 10px 14px',
         minHeight: 132,
-        background: done ? 'rgba(255,255,255,.025)' : undefined,
-        boxShadow: doneByMe ? 'var(--glow-lime)' : undefined,
+        background: closed ? 'rgba(255,255,255,.025)' : undefined,
+        boxShadow: closed && doneByMe ? 'var(--glow-lime)' : undefined,
         transition: 'transform .1s ease, box-shadow .2s ease',
-        opacity: done && !doneByMe ? 0.55 : 1,
+        opacity: closed && !doneByMe ? 0.55 : 1,
       }}
     >
-      <span style={{ filter: done ? 'grayscale(0.75) opacity(0.55)' : 'none' }}>
+      <span style={{ filter: closed ? 'grayscale(0.75) opacity(0.55)' : 'none' }}>
         <ChoreIcon name={chore.icon} size={58} />
       </span>
       <span style={{ fontWeight: 700, fontSize: '0.95rem', lineHeight: 1.2 }}>{chore.title}</span>
 
-      {done ? (
+      {closed ? (
         <span style={{ fontSize: '0.8rem', color: doneByMe ? 'var(--good)' : 'var(--ink-soft)', fontWeight: 700 }}>
-          {doneByMe ? '✓ בוצע' : `בוצע ע"י ${doneBy}`}
+          {othersLabel ? `✓ ${othersLabel}` : '✓ בוצע'}
+        </span>
+      ) : started ? (
+        <span style={{ display: 'grid', gap: 2, justifyItems: 'center' }}>
+          <span
+            style={{
+              fontSize: '0.76rem',
+              background: 'rgba(163,230,53,.12)',
+              color: 'var(--good)',
+              border: '1px solid rgba(163,230,53,.35)',
+              borderRadius: 999,
+              padding: '2px 10px',
+              fontWeight: 700,
+            }}
+          >
+            {doneCount}/{perDay} — אפשר שוב
+          </span>
+          {othersLabel && (
+            <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', fontWeight: 600 }}>{othersLabel}</span>
+          )}
         </span>
       ) : (
         <span
@@ -71,10 +96,11 @@ export function ChoreButton({ chore, doneBy, doneByMe, readonly, onDone }: Props
           }}
         >
           {chore.points === 1 ? '+1' : `+${chore.points}`}
+          {perDay > 1 ? ` ×${perDay}` : ''}
         </span>
       )}
 
-      {doneByMe && (
+      {closed && doneByMe && (
         <span
           style={{
             position: 'absolute',
