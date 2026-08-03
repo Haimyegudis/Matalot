@@ -1,16 +1,21 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSession } from '../lib/session'
+import { supabase } from '../lib/supabase'
 import type { FamilyData } from '../lib/store'
 import { weekBounds, weeklyScores, dayKey } from '../lib/logic'
 import { ChoreButton } from '../components/ChoreButton'
 import { ScoreBar } from '../components/ScoreBar'
 import { ShowerCard } from '../components/ShowerCard'
-import { ChoreIcon } from '../components/icons'
+import { ChoreIcon, ICON_KEYS } from '../components/icons'
+import { Sheet } from '../components/Sheet'
 
 export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boolean }) {
   const { profiles, currentProfile } = useSession()
   const [toast, setToast] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [newIcon, setNewIcon] = useState('star')
   const me = currentProfile!
   const kids = profiles.filter((p) => p.role === 'child')
 
@@ -43,6 +48,26 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   }
 
   const dateLabel = target.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })
+
+  async function addChore() {
+    if (!newTitle.trim()) return
+    const { error } = await supabase.from('chores').insert({
+      family_id: me.family_id,
+      title: newTitle.trim(),
+      icon: newIcon,
+      points: 1,
+      per_day: 1,
+      assigned_to: null,
+      sort: data.chores.length,
+    })
+    if (!error) {
+      await data.refetch()
+      setAdding(false)
+      setNewTitle('')
+      setNewIcon('star')
+      showToast('המטלה נוספה! ✓')
+    }
+  }
 
   return (
     <div className="screen" style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
@@ -139,7 +164,59 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
             />
           )
         })}
+        {!yesterday && (
+          <button
+            onClick={() => setAdding(true)}
+            className="card"
+            style={{
+              minHeight: 132,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              color: 'var(--ink-soft)',
+              borderStyle: 'dashed',
+              background: 'transparent',
+            }}
+          >
+            <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>＋</span>
+            <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>מטלה חדשה</span>
+          </button>
+        )}
       </section>
+
+      <Sheet open={adding} onClose={() => setAdding(false)}>
+        <div style={{ display: 'grid', gap: 12, paddingBottom: 8 }}>
+          <h2 style={{ fontSize: '1.15rem' }}>מטלה חדשה</h2>
+          <input value={newTitle} placeholder="מה עשית / מה צריך לעשות?" onChange={(e) => setNewTitle(e.target.value)} />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {ICON_KEYS.map((k) => (
+              <button
+                key={k}
+                onClick={() => setNewIcon(k)}
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 12,
+                  border: newIcon === k ? '3px solid var(--grape)' : 'var(--border)',
+                  background: 'rgba(255,255,255,.05)',
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
+                <ChoreIcon name={k} size={34} />
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>
+            המטלה תהיה משותפת ושווה נקודה אחת. הורה יכול לערוך אותה במצב הורה.
+          </div>
+          <button className="btn" onClick={addChore} disabled={!newTitle.trim()}>
+            הוספה
+          </button>
+        </div>
+      </Sheet>
 
       {toast && (
         <div

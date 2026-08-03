@@ -51,15 +51,22 @@ const RobotVacIcon = (
   </Svg>
 )
 
-/* להוציא את שלג — spitz silhouette with pointy ears, curled tail, leash */
+/* להוציא את שלג — white spitz head: pointy ears, collar + tag (visually verified) */
 const SpitzIcon = (
   <Svg>
-    <path d="M14 15l-2.5-7 6.5 3.5M28 15l2.5-7-6.5 3.5" stroke={L} strokeWidth={W} strokeLinejoin="round" strokeLinecap="round" />
-    <path d="M12.5 22c-1.5-6 2.5-11 8.5-11s10 5 8.5 11c3.5 1 5.5 4 5 8-1 6-6 9.5-13.5 9.5S8.5 36 7.5 30c-.6-3.8 1.5-7 5-8z" stroke={L} strokeWidth={W} strokeLinejoin="round" />
-    <path d="M35 32c4-.5 6.5-3.5 6-7.5-3.5 0-6 2-6.5 4.5" stroke={L} strokeWidth={W} strokeLinejoin="round" />
-    <path d="M18 40v3m12-3v3" stroke={L} strokeWidth={2.4} strokeLinecap="round" />
-    <path d="M30 14c4-3.5 8-4.5 11.5-3.5" stroke="#fb7185" strokeWidth={2.4} strokeLinecap="round" />
-    <circle cx="43" cy="9.5" r="2.5" stroke="#fb7185" strokeWidth={2.4} />
+    <path d="M11 16 L8 4 L20 9 Z" fill="#fff" stroke={L} strokeWidth={2} strokeLinejoin="round" />
+    <path d="M37 16 L40 4 L28 9 Z" fill="#fff" stroke={L} strokeWidth={2} strokeLinejoin="round" />
+    <path d="M11.5 13.5 L10.5 8 L16 10.5 Z" fill="#fbb1c0" />
+    <path d="M36.5 13.5 L37.5 8 L32 10.5 Z" fill="#fbb1c0" />
+    <circle cx="24" cy="23" r="14.5" fill="#fff" stroke={L} strokeWidth={2} />
+    <path d="M10.5 28 C8 30 8 33 10 35 M37.5 28 C40 30 40 33 38 35" stroke={L} strokeWidth={2} fill="#fff" strokeLinecap="round" />
+    <ellipse cx="18.5" cy="21" rx="2" ry="2.4" fill="#1b1729" />
+    <ellipse cx="29.5" cy="21" rx="2" ry="2.4" fill="#1b1729" />
+    <path d="M21.5 27.5 L26.5 27.5 L24 30.5 Z" fill="#1b1729" />
+    <path d="M24 30.5 L24 32.5 M24 32.5 C22.5 34.5 20 34.5 19 33 M24 32.5 C25.5 34.5 28 34.5 29 33" stroke="#1b1729" strokeWidth={1.8} fill="none" strokeLinecap="round" />
+    <path d="M22.5 34.5 C22.5 37 25.5 37 25.5 34.5 L25.2 33.6 L22.8 33.6 Z" fill="#fb7185" />
+    <path d="M14 34.5 C17 38.5 31 38.5 34 34.5 L34.5 37.5 C30.5 41.5 17.5 41.5 13.5 37.5 Z" fill="#fb7185" stroke="#e4566b" strokeWidth={1} />
+    <circle cx="24" cy="40.5" r="2.6" fill="#fbbf24" stroke="#e4a90f" strokeWidth={1} />
   </Svg>
 )
 
