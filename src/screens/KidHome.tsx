@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -11,6 +11,7 @@ import { ScoreBar } from '../components/ScoreBar'
 import { ShowerCard } from '../components/ShowerCard'
 import { ChoreIcon, IconPicker, ICON_LABELS } from '../components/icons'
 import { Sheet } from '../components/Sheet'
+import { Celebration } from '../components/Celebration'
 import { playMagic } from '../lib/sound'
 
 /** "whose turn" line for turn-taking chores, with the user's requested phrasing */
@@ -22,7 +23,7 @@ function turnPhrase(chore: Chore, kid: Profile, isSelf: boolean): string {
 }
 
 export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boolean }) {
-  const { profiles, currentProfile } = useSession()
+  const { profiles, currentProfile, family } = useSession()
   const [toast, setToast] = useState('')
   const [adding, setAdding] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -40,6 +41,19 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const day = dayKey(target)
 
   const scores = weeklyScores(data.completions, data.tasks, data.chores, kids, weekBounds(new Date()))
+
+  // reaching the parent-set weekly goal fires the celebration once per week
+  const [celebrating, setCelebrating] = useState(false)
+  const goal = family?.points_goal ?? null
+  const myScore = scores[me.id] ?? 0
+  const weekKey = dayKey(weekBounds(new Date()).start)
+  useEffect(() => {
+    if (yesterday || me.role !== 'child' || !goal || myScore < goal) return
+    const key = `celebrated:${me.id}:${weekKey}:${goal}`
+    if (localStorage.getItem(key)) return
+    localStorage.setItem(key, '1')
+    setCelebrating(true)
+  }, [myScore, goal, me.id, me.role, yesterday, weekKey])
 
   // assigned chores are exclusive to their kid; shared chores open to all.
   // days: null = fixed daily tile, [d,...] = those weekdays, [] = catalog —
@@ -415,6 +429,10 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
           )}
         </div>
       </Sheet>
+
+      {celebrating && goal && (
+        <Celebration name={me.name} goal={goal} onClose={() => setCelebrating(false)} />
+      )}
 
       {toast && (
         <div

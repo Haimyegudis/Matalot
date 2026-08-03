@@ -2,9 +2,12 @@ import { useState } from 'react'
 import { useSession } from '../../lib/session'
 import { supabase } from '../../lib/supabase'
 import { hashPin } from '../../lib/pin'
+import { Celebration } from '../../components/Celebration'
 
 export function Settings() {
   const { family, profiles, refresh } = useSession()
+  const [goal, setGoal] = useState(family?.points_goal ? String(family.points_goal) : '')
+  const [preview, setPreview] = useState(false)
   const [names, setNames] = useState(Object.fromEntries(profiles.map((p) => [p.id, p.name])))
   const [genders, setGenders] = useState<Record<string, 'male' | 'female'>>(
     Object.fromEntries(profiles.map((p) => [p.id, p.gender])),
@@ -47,6 +50,13 @@ export function Settings() {
     setTimeout(() => setMsg(''), 2200)
   }
 
+  async function saveGoal() {
+    const n = goal ? Math.max(1, Number(goal)) : null
+    await supabase.from('families').update({ points_goal: n }).eq('id', family!.id)
+    await refresh()
+    flash(n ? `יעד נשמר: ${n} נקודות ✓` : 'היעד בוטל ✓')
+  }
+
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <div className="card" style={{ padding: 16, display: 'grid', gap: 10 }}>
@@ -74,6 +84,26 @@ export function Settings() {
       </div>
 
       <div className="card" style={{ padding: 16, display: 'grid', gap: 10 }}>
+        <h2 style={{ fontSize: '1.1rem' }}>🏆 יעד נקודות שבועי</h2>
+        <div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
+          כשילד מגיע ליעד — מסך "כל הכבוד" עם קונפטי ולבבות. ריק = כבוי. מתאפס כל שבוע.
+        </div>
+        <input
+          dir="ltr"
+          inputMode="numeric"
+          placeholder="למשל: 20"
+          value={goal}
+          onChange={(e) => setGoal(e.target.value.replace(/\D/g, '').slice(0, 3))}
+        />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn--teal" style={{ flex: 1 }} onClick={saveGoal}>שמירה</button>
+          <button className="btn btn--ghost" style={{ flex: 1 }} onClick={() => setPreview(true)}>
+            תצוגה מקדימה 🎉
+          </button>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 16, display: 'grid', gap: 10 }}>
         <h2 style={{ fontSize: '1.1rem' }}>שינוי PIN</h2>
         <input dir="ltr" inputMode="numeric" placeholder="PIN נוכחי" value={oldPin} maxLength={6} onChange={(e) => setOldPin(e.target.value.replace(/\D/g, ''))} />
         <input dir="ltr" inputMode="numeric" placeholder="PIN חדש" value={newPin} maxLength={6} onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))} />
@@ -81,6 +111,14 @@ export function Settings() {
       </div>
 
       {msg && <div style={{ textAlign: 'center', fontWeight: 700 }}>{msg}</div>}
+
+      {preview && (
+        <Celebration
+          name={profiles.find((p) => p.role === 'child')?.name ?? 'אלוף'}
+          goal={goal ? Number(goal) : 20}
+          onClose={() => setPreview(false)}
+        />
+      )}
     </div>
   )
 }

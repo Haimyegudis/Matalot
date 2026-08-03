@@ -3,6 +3,8 @@ export interface Family {
   owner_uid: string
   name: string
   parent_pin_hash: string
+  /** weekly points goal for the celebration screen; null = off */
+  points_goal: number | null
 }
 
 /* DiceBear "Adventurer" selections */
