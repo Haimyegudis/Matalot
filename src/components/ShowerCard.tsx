@@ -1,5 +1,5 @@
 import type { Chore, Completion, Profile } from '../lib/db-types'
-import { showerFirstTonight } from '../lib/logic'
+import { showerFirstTonight, showerFirstOn, dayKey } from '../lib/logic'
 import { g } from '../lib/gender'
 import { ChoreIcon } from './icons'
 
@@ -27,6 +27,21 @@ export function ShowerCard({
   const suggestedKid = kids.find((k) => k.id === suggested)
   const nameOf = (id: string) => kids.find((k) => k.id === id)?.name ?? '?'
 
+  // who showered first yesterday (fallback: most recent earlier day with data)
+  const yest = new Date(`${day}T12:00:00`)
+  yest.setDate(yest.getDate() - 1)
+  let prevLabel: string | null = null
+  let prevKid = kids.find((k) => k.id === showerFirstOn(completions, chore.id, dayKey(yest)))
+  if (prevKid) {
+    prevLabel = `אתמול ${prevKid.name} ${g(prevKid, 'התקלח ראשון', 'התקלחה ראשונה')} 🚿`
+  } else {
+    const lastDay = completions
+      .filter((c) => c.chore_id === chore.id && !c.revoked_by && c.day < day)
+      .reduce<string | null>((max, c) => (max === null || c.day > max ? c.day : max), null)
+    prevKid = lastDay ? kids.find((k) => k.id === showerFirstOn(completions, chore.id, lastDay)) : undefined
+    if (prevKid) prevLabel = `בפעם הקודמת ${prevKid.name} ${g(prevKid, 'התקלח ראשון', 'התקלחה ראשונה')} 🚿`
+  }
+
   return (
     <div
       className="card"
@@ -53,6 +68,9 @@ export function ShowerCard({
           </div>
         ) : (
           <div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)' }}>מי מתקלח ראשון הערב?</div>
+        )}
+        {prevLabel && (
+          <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)', fontWeight: 600 }}>{prevLabel}</div>
         )}
       </div>
       {!readonly && (
