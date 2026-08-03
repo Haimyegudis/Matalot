@@ -105,15 +105,22 @@ export function SetupScreen() {
     }
     const kidColors = ['#2ec4b6', '#ff6b6b']
     const avatarFor = (g: 'male' | 'female') => (g === 'female' ? DEFAULT_AVATAR_GIRL : DEFAULT_AVATAR)
-    await supabase.from('profiles').insert([
-      { family_id: fam.id, name: parentName, role: 'parent', gender: parentGender, color: '#9b5de5', sort: 0 },
+    // NOTE: bulk inserts must have identical keys in every row (PostgREST
+    // rejects mixed-key arrays with PGRST102) — keep all keys explicit.
+    const { error: profErr } = await supabase.from('profiles').insert([
+      { family_id: fam.id, name: parentName, role: 'parent', gender: parentGender, avatar: null, color: '#9b5de5', sort: 0 },
       { family_id: fam.id, name: kid1, role: 'child', gender: kid1Gender, avatar: avatarFor(kid1Gender), color: kidColors[0], sort: 1 },
       { family_id: fam.id, name: kid2, role: 'child', gender: kid2Gender, avatar: avatarFor(kid2Gender), color: kidColors[1], sort: 2 },
     ])
-    await supabase.from('chores').insert([
-      ...DEFAULT_CHORES.map((c) => ({ ...c, family_id: fam.id })),
+    const { error: choreErr } = await supabase.from('chores').insert([
+      ...DEFAULT_CHORES.map((c) => ({ ...c, is_shower: false, family_id: fam.id })),
       { title: 'מקלחת', icon: 'shower', is_shower: true, family_id: fam.id, sort: 9 },
     ])
+    if (profErr || choreErr) {
+      setError((profErr ?? choreErr)!.message)
+      setBusy(false)
+      return
+    }
     await refresh()
     setBusy(false)
   }
