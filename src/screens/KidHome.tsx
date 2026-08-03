@@ -193,66 +193,6 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
         )}
       </section>
 
-      {generalChores.length > 0 && (
-        <section className="card" style={{ padding: '4px 0' }}>
-          <button
-            onClick={() => setGeneralOpen(!generalOpen)}
-            style={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 16px',
-              fontWeight: 800,
-              fontFamily: 'var(--font-display)',
-              fontSize: '1rem',
-            }}
-          >
-            <span>רשימה כללית ({generalChores.length})</span>
-            <span style={{ color: 'var(--ink-soft)' }}>{generalOpen ? '▲' : '▼'}</span>
-          </button>
-          {generalOpen &&
-            generalChores.map((chore) => {
-              const rows = dayCompletions.filter((c) => c.chore_id === chore.id)
-              const closed = rows.length >= (chore.per_day ?? 1)
-              const names = [...new Set(rows.map((c) => nameOf(c.profile_id)))].join(', ')
-              return (
-                <div
-                  key={chore.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '8px 16px',
-                    borderTop: 'var(--border)',
-                    opacity: closed ? 0.6 : 1,
-                  }}
-                >
-                  <ChoreIcon name={chore.icon} size={36} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{chore.title}</div>
-                    {names && (
-                      <div style={{ fontSize: '0.75rem', color: closed ? 'var(--good)' : 'var(--ink-soft)', fontWeight: 600 }}>
-                        ✓ {names}
-                      </div>
-                    )}
-                  </div>
-                  {!viewOnly && !closed && (
-                    <button
-                      className="btn btn--ghost"
-                      style={{ padding: '7px 14px', fontSize: '0.85rem' }}
-                      onClick={() => doChore(chore.id)}
-                    >
-                      בוצע
-                    </button>
-                  )}
-                  {closed && <span style={{ color: 'var(--good)', fontWeight: 800 }}>✓</span>}
-                </div>
-              )
-            })}
-        </section>
-      )}
-
       <Sheet open={adding} onClose={() => setAdding(false)}>
         <div style={{ display: 'grid', gap: 12, paddingBottom: 8 }}>
           <h2 style={{ fontSize: '1.15rem' }}>מטלה חדשה</h2>
