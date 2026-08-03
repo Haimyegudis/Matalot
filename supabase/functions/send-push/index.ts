@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
     const { data: actor } = await supabaseAdmin
       .from('profiles')
-      .select('name, family_id')
+      .select('name, family_id, gender')
       .eq('id', profileId)
       .single()
     if (!actor || actor.family_id !== family.id) return new Response('bad profile', { status: 403 })
@@ -49,9 +49,10 @@ Deno.serve(async (req) => {
       .select('*')
       .in('profile_id', parentIds)
 
+    const verb = actor.gender === 'female' ? 'ביצעה' : 'ביצע'
     const payload = JSON.stringify({
       title: 'מטלות 🎉',
-      body: `${actor.name} ביצע/ה: ${title}`,
+      body: `${actor.name} ${verb}: ${title}`,
       url: '/parent',
     })
 

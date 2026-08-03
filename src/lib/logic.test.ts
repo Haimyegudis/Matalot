@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { weekBounds, weeklyScores, showerFirstTonight, dayKey } from './logic'
 import type { Chore, Completion, Profile, TaskRow } from './db-types'
 
-const kidA: Profile = { id: 'a', family_id: 'f', name: 'דני', role: 'child', avatar: null, photo_url: null, color: '#f00', sort: 0 }
-const kidB: Profile = { id: 'b', family_id: 'f', name: 'יעל', role: 'child', avatar: null, photo_url: null, color: '#00f', sort: 1 }
+const kidA: Profile = { id: 'a', family_id: 'f', name: 'דני', role: 'child', gender: 'male', avatar: null, photo_url: null, color: '#f00', sort: 0 }
+const kidB: Profile = { id: 'b', family_id: 'f', name: 'יעל', role: 'child', gender: 'female', avatar: null, photo_url: null, color: '#00f', sort: 1 }
 
 function chore(over: Partial<Chore>): Chore {
   return { id: 'c1', family_id: 'f', title: 'זבל', icon: 'trash', points: 1, assigned_to: null, is_shower: false, active: true, sort: 0, ...over }

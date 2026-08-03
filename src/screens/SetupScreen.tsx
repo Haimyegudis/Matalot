@@ -2,6 +2,38 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { hashPin } from '../lib/pin'
 import { useSession } from '../lib/session'
+import { DEFAULT_AVATAR, DEFAULT_AVATAR_GIRL } from '../lib/avatarOptions'
+
+function GenderPick({
+  value, onChange, labels,
+}: {
+  value: 'male' | 'female'
+  onChange: (v: 'male' | 'female') => void
+  labels: [string, string]
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 8 }}>
+      {(['male', 'female'] as const).map((gv, i) => (
+        <button
+          key={gv}
+          type="button"
+          onClick={() => onChange(gv)}
+          style={{
+            flex: 1,
+            padding: '10px 8px',
+            fontWeight: 700,
+            borderRadius: 'var(--r-sm)',
+            border: value === gv ? '3px solid var(--grape)' : 'var(--border)',
+            background: value === gv ? 'rgba(155,93,229,.1)' : 'var(--paper)',
+          }}
+        >
+          {i === 0 ? '👦 ' : '👧 '}
+          {labels[i]}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 /* First-run wizard: parent account → family + PIN → kids.
    Also serves as the login screen for additional devices. */
@@ -19,8 +51,11 @@ export function SetupScreen() {
   const [familyName, setFamilyName] = useState('')
   const [parentName, setParentName] = useState('')
   const [pin, setPin] = useState('')
+  const [parentGender, setParentGender] = useState<'male' | 'female'>('female')
   const [kid1, setKid1] = useState('')
+  const [kid1Gender, setKid1Gender] = useState<'male' | 'female'>('male')
   const [kid2, setKid2] = useState('')
+  const [kid2Gender, setKid2Gender] = useState<'male' | 'female'>('male')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -67,10 +102,11 @@ export function SetupScreen() {
       return
     }
     const kidColors = ['#2ec4b6', '#ff6b6b']
+    const avatarFor = (g: 'male' | 'female') => (g === 'female' ? DEFAULT_AVATAR_GIRL : DEFAULT_AVATAR)
     await supabase.from('profiles').insert([
-      { family_id: fam.id, name: parentName, role: 'parent', color: '#9b5de5', sort: 0 },
-      { family_id: fam.id, name: kid1, role: 'child', color: kidColors[0], sort: 1 },
-      { family_id: fam.id, name: kid2, role: 'child', color: kidColors[1], sort: 2 },
+      { family_id: fam.id, name: parentName, role: 'parent', gender: parentGender, color: '#9b5de5', sort: 0 },
+      { family_id: fam.id, name: kid1, role: 'child', gender: kid1Gender, avatar: avatarFor(kid1Gender), color: kidColors[0], sort: 1 },
+      { family_id: fam.id, name: kid2, role: 'child', gender: kid2Gender, avatar: avatarFor(kid2Gender), color: kidColors[1], sort: 2 },
     ])
     await supabase.from('chores').insert([
       ...DEFAULT_CHORES.map((c) => ({ ...c, family_id: fam.id })),
@@ -111,11 +147,14 @@ export function SetupScreen() {
           <input value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="משפחת..." />
           <label style={{ fontWeight: 600 }}>השם שלך (הורה)</label>
           <input value={parentName} onChange={(e) => setParentName(e.target.value)} />
+          <GenderPick value={parentGender} onChange={setParentGender} labels={['אבא', 'אמא']} />
           <label style={{ fontWeight: 600 }}>קוד PIN למצב הורה</label>
           <input dir="ltr" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} />
-          <label style={{ fontWeight: 600 }}>שמות הילדים</label>
-          <input value={kid1} onChange={(e) => setKid1(e.target.value)} placeholder="ילד/ה 1" />
-          <input value={kid2} onChange={(e) => setKid2(e.target.value)} placeholder="ילד/ה 2" />
+          <label style={{ fontWeight: 600 }}>הילדים</label>
+          <input value={kid1} onChange={(e) => setKid1(e.target.value)} placeholder="שם ילד/ה 1" />
+          <GenderPick value={kid1Gender} onChange={setKid1Gender} labels={['בן', 'בת']} />
+          <input value={kid2} onChange={(e) => setKid2(e.target.value)} placeholder="שם ילד/ה 2" />
+          <GenderPick value={kid2Gender} onChange={setKid2Gender} labels={['בן', 'בת']} />
           <button className="btn btn--teal" onClick={handleCreateFamily} disabled={busy}>
             {busy ? '...' : 'יוצרים את המשפחה! 🎉'}
           </button>

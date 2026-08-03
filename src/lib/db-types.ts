@@ -19,6 +19,7 @@ export interface Profile {
   family_id: string
   name: string
   role: 'parent' | 'child'
+  gender: 'male' | 'female'
   avatar: AvatarConfig | null
   photo_url: string | null
   color: string

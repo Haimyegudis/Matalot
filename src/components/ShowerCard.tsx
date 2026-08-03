@@ -1,5 +1,6 @@
 import type { Chore, Completion, Profile } from '../lib/db-types'
 import { showerFirstTonight } from '../lib/logic'
+import { g } from '../lib/gender'
 import { ChoreIcon } from './icons'
 
 export function ShowerCard({
@@ -48,7 +49,7 @@ export function ShowerCard({
           </div>
         ) : suggestedKid ? (
           <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--sky)' }}>
-            הערב ראשון: {suggestedKid.name} 🚿
+            הערב {g(suggestedKid, 'ראשון', 'ראשונה')}: {suggestedKid.name} 🚿
           </div>
         ) : (
           <div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)' }}>מי מתקלח ראשון הערב?</div>

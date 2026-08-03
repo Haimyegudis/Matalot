@@ -1,6 +1,7 @@
 import { useSession } from '../lib/session'
 import { ProfileFace } from '../components/AvatarSvg'
 import { enablePush } from '../lib/push'
+import { roleLabel } from '../lib/gender'
 
 export function ProfilePicker() {
   const { profiles, setCurrentProfile } = useSession()
@@ -33,7 +34,7 @@ export function ProfilePicker() {
             <ProfileFace profile={p} size={84} />
             <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem' }}>{p.name}</span>
             <span style={{ fontSize: '0.75rem', color: 'var(--ink-soft)', fontWeight: 600 }}>
-              {p.role === 'parent' ? 'הורה' : 'ילד/ה'}
+              {roleLabel(p)}
             </span>
           </button>
         ))}

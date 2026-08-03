@@ -6,14 +6,20 @@ import { hashPin } from '../../lib/pin'
 export function Settings() {
   const { family, profiles, refresh } = useSession()
   const [names, setNames] = useState(Object.fromEntries(profiles.map((p) => [p.id, p.name])))
+  const [genders, setGenders] = useState<Record<string, 'male' | 'female'>>(
+    Object.fromEntries(profiles.map((p) => [p.id, p.gender])),
+  )
   const [oldPin, setOldPin] = useState('')
   const [newPin, setNewPin] = useState('')
   const [msg, setMsg] = useState('')
 
   async function saveNames() {
     for (const p of profiles) {
-      if (names[p.id] !== p.name && names[p.id].trim()) {
-        await supabase.from('profiles').update({ name: names[p.id].trim() }).eq('id', p.id)
+      const patch: { name?: string; gender?: 'male' | 'female' } = {}
+      if (names[p.id] !== p.name && names[p.id].trim()) patch.name = names[p.id].trim()
+      if (genders[p.id] !== p.gender) patch.gender = genders[p.id]
+      if (Object.keys(patch).length > 0) {
+        await supabase.from('profiles').update(patch).eq('id', p.id)
       }
     }
     await refresh()
@@ -46,16 +52,25 @@ export function Settings() {
       <div className="card" style={{ padding: 16, display: 'grid', gap: 10 }}>
         <h2 style={{ fontSize: '1.1rem' }}>שמות</h2>
         {profiles.map((p) => (
-          <label key={p.id} style={{ fontWeight: 600, fontSize: '0.85rem' }}>
-            {p.role === 'parent' ? 'הורה' : 'ילד/ה'}
-            <input
-              value={names[p.id]}
-              onChange={(e) => setNames({ ...names, [p.id]: e.target.value })}
-              style={{ marginTop: 4 }}
-            />
-          </label>
+          <div key={p.id} style={{ display: 'grid', gap: 6 }}>
+            <label style={{ fontWeight: 600, fontSize: '0.85rem' }}>
+              {p.role === 'parent' ? 'הורה' : 'ילד/ה'}
+              <input
+                value={names[p.id]}
+                onChange={(e) => setNames({ ...names, [p.id]: e.target.value })}
+                style={{ marginTop: 4 }}
+              />
+            </label>
+            <select
+              value={genders[p.id]}
+              onChange={(e) => setGenders({ ...genders, [p.id]: e.target.value as 'male' | 'female' })}
+            >
+              <option value="male">{p.role === 'parent' ? 'אבא' : 'בן 👦'}</option>
+              <option value="female">{p.role === 'parent' ? 'אמא' : 'בת 👧'}</option>
+            </select>
+          </div>
         ))}
-        <button className="btn btn--teal" onClick={saveNames}>שמירת שמות</button>
+        <button className="btn btn--teal" onClick={saveNames}>שמירה</button>
       </div>
 
       <div className="card" style={{ padding: 16, display: 'grid', gap: 10 }}>
