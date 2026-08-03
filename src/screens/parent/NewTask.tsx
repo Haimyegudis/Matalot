@@ -3,13 +3,28 @@ import { useSession } from '../../lib/session'
 import { supabase } from '../../lib/supabase'
 import { IconPicker, ICON_LABELS } from '../../components/icons'
 
-function NudgeCard({ kids, senderName }: { kids: { id: string; name: string; color: string }[]; senderName: string }) {
+function NudgeCard({ kids, familyId, senderName }: { kids: { id: string; name: string; color: string }[]; familyId: string; senderName: string }) {
   const [childId, setChildId] = useState(kids[0]?.id ?? '')
   const [message, setMessage] = useState('')
+  const [when, setWhen] = useState('')
   const [status, setStatus] = useState('')
 
   async function send() {
     setStatus('...')
+    if (when) {
+      // scheduled reminder — the cron sender delivers it at the chosen time
+      const { error } = await supabase.from('nudges').insert({
+        family_id: familyId,
+        child_id: childId,
+        message: message.trim() || 'תזכורת!',
+        sender_name: senderName,
+        remind_at: new Date(when).toISOString(),
+      })
+      setStatus(error ? 'שגיאה' : `מתוזמן ל-${new Date(when).toLocaleString('he-IL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })} ✓`)
+      if (!error) { setMessage(''); setWhen('') }
+      setTimeout(() => setStatus(''), 3500)
+      return
+    }
     const { data, error } = await supabase.functions.invoke('send-push', {
       body: { kind: 'nudge', profileId: childId, title: message.trim(), senderName },
     })
@@ -43,11 +58,15 @@ function NudgeCard({ kids, senderName }: { kids: { id: string; name: string; col
       </div>
       <input
         value={message}
-        placeholder="ההודעה (ריק = 'יש לך מטלות פתוחות!')"
+        placeholder="ההודעה, למשל: שיעור פרטי עם יוליה בעוד שעה"
         onChange={(e) => setMessage(e.target.value)}
       />
+      <label style={{ fontWeight: 700, fontSize: '0.85rem' }}>
+        מתי? (ריק = עכשיו)
+        <input type="datetime-local" dir="ltr" value={when} onChange={(e) => setWhen(e.target.value)} style={{ marginTop: 6 }} />
+      </label>
       <button className="btn btn--coral" onClick={send} disabled={!childId || status === '...'}>
-        שליחה מיידית
+        {when ? 'תזמון התראה ⏰' : 'שליחה מיידית 📣'}
       </button>
       {status && <div style={{ textAlign: 'center', fontWeight: 700, fontSize: '0.9rem' }}>{status}</div>}
     </div>
@@ -85,7 +104,7 @@ export function NewTask({ onCreated }: { onCreated: () => void }) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-    <NudgeCard kids={kids} senderName={currentProfile?.name ?? ''} />
+    <NudgeCard kids={kids} familyId={family!.id} senderName={currentProfile?.name ?? ''} />
     <div className="card" style={{ padding: 16, display: 'grid', gap: 12 }}>
       <h2 style={{ fontSize: '1.15rem' }}>משימה חדשה 📌</h2>
       <div style={{ display: 'flex', gap: 8 }}>

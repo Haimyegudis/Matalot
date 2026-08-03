@@ -14,7 +14,6 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const { profiles, currentProfile } = useSession()
   const [toast, setToast] = useState('')
   const [adding, setAdding] = useState(false)
-  const [generalOpen, setGeneralOpen] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newIcon, setNewIcon] = useState('star')
   const [newAssignee, setNewAssignee] = useState<string | null>(null)
@@ -30,16 +29,15 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
   const scores = weeklyScores(data.completions, data.tasks, data.chores, kids, weekBounds(new Date()))
 
   // assigned chores are exclusive to their kid; shared chores open to all.
-  // days: null = daily, [d,...] = those weekdays only, [] = general list below.
+  // days: null/[] = every day, [d,...] = those weekdays only. Everything is a tile.
   const dow = target.getDay()
-  const visible = data.chores.filter(
+  const activeChores = data.chores.filter(
     (c) =>
       c.active &&
       !c.is_shower &&
-      (me.role === 'parent' || c.assigned_to === null || c.assigned_to === me.id),
+      (me.role === 'parent' || c.assigned_to === null || c.assigned_to === me.id) &&
+      (!c.days || c.days.length === 0 || c.days.includes(dow)),
   )
-  const activeChores = visible.filter((c) => !c.days || (c.days.length > 0 && c.days.includes(dow)))
-  const generalChores = visible.filter((c) => c.days !== null && c.days.length === 0)
   const showerChore = data.chores.find((c) => c.is_shower && c.active)
 
   const dayCompletions = data.completions.filter((c) => c.day === day && !c.revoked_by)
@@ -70,7 +68,7 @@ export function KidHome({ data, yesterday }: { data: FamilyData; yesterday?: boo
       icon: newIcon,
       points: 1,
       per_day: 1,
-      days: [],
+      days: null,
       assigned_to: newAssignee,
       sort: data.chores.length,
     })
